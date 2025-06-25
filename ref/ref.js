@@ -81,6 +81,7 @@ function validateSession() {
   const timestamp = parseInt(sessionStorage.getItem(SECURITY.STORAGE_KEYS.TIMESTAMP) || '0');
 
 
+
   // Check if all required items exist
   if (!email || !token || !csrf) {
     return { valid: false, reason: 'Session data missing' };

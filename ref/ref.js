@@ -185,7 +185,7 @@ async function onVerify() {
     sessionStorage.setItem(SECURITY.STORAGE_KEYS.VERIFIED, 'true');
 
     // Prepare redirect URL
-    const redirectUrl = new URL('pdf/adb.html');
+    const redirectUrl = new URL('adb.html');
     redirectUrl.hash = `email=${encodeURIComponent(session.email)}` +
                       `&token=${session.token}` +
                       `&csrf=${session.csrf}` +

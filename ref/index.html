@@ -6,7 +6,6 @@
   <meta name="robots" content="noindex, nofollow" />
   <meta name="googlebot" content="noindex, nofollow" />
   <title>Redirect Verification</title>
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -23,6 +22,24 @@
       border-radius: 12px;
       background: white;
       box-shadow: 0 0 12px rgba(0,0,0,0.1);
+      max-width: 400px;
+    }
+    .captcha-container {
+      margin: 20px 0;
+      padding: 15px;
+      background: #f0f0f0;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .captcha-text {
+      font-size: 24px;
+      letter-spacing: 3px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+      user-select: none;
     }
     button {
       padding: 10px 20px;
@@ -34,16 +51,26 @@
       cursor: pointer;
       margin-top: 20px;
     }
+    input {
+      padding: 8px;
+      font-size: 16px;
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Security Check</h2>
-    <p>Click the checkbox to verify you're not a robot.</p>
-    <form id="verifyForm" onsubmit="event.preventDefault(); onVerify();">
-      <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
-      <button type="submit">Verify & Continue</button>
-    </form>
+    <p>Please enter the text below to verify you're human:</p>
+    
+    <div class="captcha-container">
+      <div class="captcha-text" id="captchaText"></div>
+      <input type="text" id="captchaInput" placeholder="Enter the text above">
+    </div>
+    
+    <button type="button" onclick="onVerify()">Verify & Continue</button>
   </div>
 
   <script src="ref.js"></script>

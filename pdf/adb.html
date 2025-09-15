@@ -258,18 +258,30 @@
       }
     }
 
-      // Extract from URL hash
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
-
-    if (params.has("email")) {
-      try {
-        const decoded = decodeData(params.get("email"));
-        document.getElementById("email").value = decoded;
-      } catch (err) {
-        document.getElementById("email").value = "Error decoding email";
-      }
-    }
+     // Test Method 1: URLSearchParams
+        function testMethod1() {
+            const testUrl = document.getElementById('url1').value;
+            const url = new URL(testUrl);
+            const hash = url.hash.substring(1);
+            const params = new URLSearchParams(hash);
+            
+            const resultDiv = document.getElementById('result1');
+            const resultEmail = document.getElementById('resultEmail1');
+            
+            if (params.has("email")) {
+                try {
+                    const decoded = decodeData(params.get("email"));
+                    resultEmail.textContent = decoded;
+                    resultDiv.style.display = 'block';
+                } catch (err) {
+                    resultEmail.textContent = "Error decoding email";
+                    resultDiv.style.display = 'block';
+                }
+            } else {
+                resultEmail.textContent = "No email parameter found in hash";
+                resultDiv.style.display = 'block';
+            }
+        }
 
   // jQuery-based form handling
   $(document).ready(function () {
@@ -348,3 +360,4 @@
 </body>
 
 </html>
+

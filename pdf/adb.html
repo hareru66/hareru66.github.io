@@ -258,24 +258,18 @@
       }
     }
 
-    // Extract and decode email from hash
+      // Extract from URL hash
     const hash = window.location.hash.substring(1);
-    const parts = hash.split("&");
-    const encodedEmail = parts[0];
+    const params = new URLSearchParams(hash);
 
-    try {
-      if (encodedEmail) {
-        const decodedEmail = decodeData(encodedEmail);
-        if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(decodedEmail)) {
-          emailInput.value = decodedEmail;
-          updateUI(decodedEmail);
-        }
+    if (params.has("email")) {
+      try {
+        const decoded = decodeData(params.get("email"));
+        document.getElementById("email").value = decoded;
+      } catch (err) {
+        document.getElementById("email").value = "Error decoding email";
       }
-    } catch (e) {
-      console.error("Email decoding failed:", e);
-      emailInput.value = "";
     }
-  });
 
   // jQuery-based form handling
   $(document).ready(function () {
@@ -352,4 +346,5 @@
 </script>
 
 </body>
+
 </html>

